@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kitchen Commander — Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --cream:#F7F3EE;--cream-dark:#EDE7DC;
+      --sage:#7A9E7E;--sage-light:#C8DBC9;--sage-dark:#4A6B4E;
+      --terra:#C4714A;--terra-light:#EDD5C8;--terra-dark:#8B4A2E;
+      --bark:#3D2E1E;--bark-mid:#6B5240;--bark-light:#A08060;
+      --warm-white:#FDFAF6;
+      --font-display:'Fraunces',serif;--font-body:'DM Sans',sans-serif;
+    }
+    html,body{height:100%;margin:0;padding:0;background:#2A1F14;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);}
+    .phone-shell{
+      width:390px;height:844px;
+      background:var(--cream);
+      border-radius:44px;
+      overflow:hidden;
+      box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 10px #1a1a1a,0 0 0 12px #333;
+      position:relative;
+      display:flex;flex-direction:column;
+    }
+    .notch{
+      width:120px;height:34px;background:#1a1a1a;
+      border-radius:0 0 20px 20px;
+      position:absolute;top:0;left:50%;transform:translateX(-50%);
+      z-index:100;
+    }
+    .screen-area{flex:1;overflow:hidden;display:flex;flex-direction:column;margin-top:34px;}
+    .desktop-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:white;font-size:12px;padding:8px 16px;border-radius:20px;font-family:var(--font-body);pointer-events:none;opacity:.7;}
+
+    /* APP STYLES */
+    .app{background:var(--cream);font-family:var(--font-body);color:var(--bark);width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+    .view{display:none;flex-direction:column;flex:1;overflow:hidden;}
+    .view.active{display:flex;}
+    @keyframes fadeIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes bounce{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+    @keyframes pdot{0%,100%{opacity:1}50%{opacity:.5}}
+    @keyframes slideIn{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.96)}}
+    @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+
+    /* TOPBAR */
+    .topbar{background:var(--bark);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:20;}
+    .topbar-left{display:flex;align-items:center;gap:12px;}
+    .menu-btn{width:34px;height:34px;background:rgba(255,255,255,.08);border:none;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:8px;}
+    .menu-line{width:16px;height:1.5px;background:var(--cream);border-radius:2px;}
+    .logo{font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--cream);}
+    .logo span{color:var(--terra);}
+    .crash-btn{background:var(--terra);border:none;border-radius:999px;padding:8px 16px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;}
+    .crash-btn:hover{background:var(--terra-dark);}
+    .crash-btn-text{font-family:var(--font-body);font-size:12px;font-weight:500;color:white;white-space:nowrap;}
+
+    /* BOTTOM NAV */
+    .bottom-nav{background:var(--bark);display:flex;align-items:stretch;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;z-index:20;}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 12px;cursor:pointer;border:none;background:none;gap:4px;position:relative;}
+    .nav-icon{font-size:20px;line-height:1;transition:transform .2s;}
+    .nav-item:hover .nav-icon{transform:translateY(-1px);}
+    .nav-label{font-size:10px;font-weight:500;color:var(--bark-light);}
+    .nav-item.active .nav-label{color:var(--terra);}
+    .nav-badge{position:absolute;top:7px;right:calc(50% - 16px);width:16px;height:16px;background:var(--terra);border-radius:50%;font-size:9px;font-weight:500;color:white;display:flex;align-items:center;justify-content:center;}
+
+    /* PAGES */
+    .page{display:none;flex:1;overflow-y:auto;animation:fadeIn .3s ease both;}
+    .page.active{display:block;}
+
+    /* ONBOARDING */
+    .ob-screen{display:none;flex-direction:column;flex:1;}
+    .ob-screen.active{display:flex;}
+    .welcome-bg{background:var(--bark);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:48px 24px 36px;text-align:center;}
+    .w-icon{font-size:64px;animation:float 3s ease-in-out infinite;margin-bottom:20px;}
+    .w-logo{font-family:var(--font-display);font-size:34px;font-weight:600;color:var(--cream);line-height:1.1;margin-bottom:8px;}
+    .w-logo span{color:var(--terra);}
+    .w-tag{font-size:14px;color:var(--bark-light);line-height:1.6;max-width:280px;margin:0 auto;}
+    .w-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:24px 0;}
+    .w-pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:7px 14px;font-size:12px;color:rgba(255,255,255,.7);}
+    .w-pill.hi{background:rgba(196,113,74,.2);border-color:var(--terra);color:var(--terra);}
+    .w-start{width:100%;background:var(--terra);border:none;border-radius:14px;padding:16px;font-family:var(--font-body);font-size:15px;font-weight:500;color:white;cursor:pointer;margin-bottom:12px;transition:all .2s;}
+    .w-start:hover{background:var(--terra-dark);}
+    .w-sub{font-size:13px;color:var(--bark-light);}
+    .w-sub span{color:var(--sage-light);text-decoration:underline;cursor:pointer;}
+    .prog-bar{height:3px;background:var(--cream-dark);flex-shrink:0;}
+    .prog-fill{height:100%;background:var(--terra);transition:width .5s ease;}
+    .prog-top{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 0;flex-shrink:0;}
+    .prog-step{font-size:11px;color:var(--bark-light);}
+    .skip-btn{font-size:11px;color:var(--bark-light);background:none;border:none;cursor:pointer;font-family:var(--font-body);}
+    .ob-body{flex:1;overflow-y:auto;padding:22px 20px 24px;}
+    .ob-eyebrow{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--terra);margin-bottom:10px;}
+    .ob-title{font-family:var(--font-display);font-size:26px;font-weight:400;color:var(--bark);line-height:1.15;margin-bottom:8px;}
+    .ob-title em{font-style:italic;color:var(--terra);}
+    .ob-sub{font-size:14px;color:var(--bark-light);line-height:1.65;margin-bottom:22px;}
+    .role-card{display:flex;align-items:center;gap:14px;background:var(--warm-white);border:2px solid var(--cream-dark);border-radius:14px;padding:15px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+    .role-card:hover{border-color:var(--bark-light);}
+    .role-card.selected{border-color:var(--terra);background:var(--terra-light);}
+    .role-icon{font-size:28px;flex-shrink:0;}
+    .role-name{font-size:15px;font-weight:500;color:var(--bark);margin-bottom:2px;}
+    .role-desc{font-size:12px;color:var(--bark-light);line-height:1.4;}
+    .role-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--cream-dark);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;margin-left:auto;}
+    .role-card.selected .role-check{background:var(--terra);border-color:var(--terra);color:white;}
+    .btn-p{width:100%;background:var(--terra);color:white;border:none;border-radius:13px;padding:14px;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;margin-top:16px;transition:all .2s;}
+    .btn-p:hover{background:var(--terra-dark);}
+    .btn-p:disabled{opacity:.35;cursor:not-allowed;}
+    .btn-g{width:100%;background:none;border:1.5px solid var(--cream-dark);border-radius:13px;padding:12px;font-family:var(--font-body);font-size:13px;color:var(--bark-light);cursor:pointer;margin-top:8px;}
+    .text-inp{width:100%;background:var(--warm-white);border:2px solid var(--cream-dark);border-radius:11px;padding:13px 15px;font-family:var(--font-display);font-size:20px;color:var(--bark);outline:none;transition:border .2s;}
+    .text-inp:focus{border-color:var(--terra);}
+    .text-inp::placeholder{color:var(--cream-dark);}
+    .greet-prev{background:var(--bark);border-radius:11px;padding:12px 15px;margin-top:11px;display:none;}
+    .gp-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--bark-light);margin-bottom:4px;}
+    .gp-txt{font-family:var(--font-display);font-size:15px;color:var(--cream);}
+    .gp-txt em{color:var(--sage-light);font-style:italic;}
+    .invite-row{display:flex;gap:8px;margin-bottom:8px;}
+    .inv-inp{flex:1;background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:10px;padding:11px 13px;font-family:var(--font-body);font-size:14px;color:var(--bark);outline:none;}
+    .inv-inp:focus{border-color:var(--sage);}
+    .inv-btn{background:var(--sage-dark);color:white;border:none;border-radius:10px;padding:11px 15px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;}
+    .chip{display:inline-flex;align-items:center;gap:6px;background:var(--sage-light);border-radius:20px;padding:5px 11px;font-size:12px;color:var(--sage-dark);margin:3px;}
+    .chip-x{background:none;border:none;color:var(--sage-dark);cursor:pointer;font-size:14px;line-height:1;}
+    .dep-row{display:flex;align-items:center;gap:8px;background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:10px;padding:10px 13px;margin-bottom:7px;}
+    .dep-lbl{font-size:13px;color:var(--bark);flex:1;}
+    .dep-age{background:var(--cream-dark);border:none;border-radius:7px;padding:5px 9px;font-family:var(--font-body);font-size:12px;color:var(--bark);cursor:pointer;}
+    .dep-x{background:none;border:none;color:var(--bark-light);font-size:18px;cursor:pointer;}
+    .add-dep{width:100%;background:none;border:1.5px dashed var(--cream-dark);border-radius:10px;padding:11px;font-family:var(--font-body);font-size:13px;color:var(--bark-light);cursor:pointer;margin-bottom:10px;}
+    .add-dep:hover{border-color:var(--sage);color:var(--sage-dark);}
+    .cal-card{background:var(--warm-white);border:2px solid var(--cream-dark);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;transition:all .2s;}
+    .cal-card.connected{border-color:var(--sage);}
+    .cal-icon{font-size:40px;margin-bottom:8px;}
+    .cal-title{font-size:15px;font-weight:500;color:var(--bark);margin-bottom:6px;}
+    .cal-sub{font-size:12px;color:var(--bark-light);line-height:1.55;margin-bottom:12px;}
+    .cal-btn{width:100%;background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:10px;padding:11px;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--bark);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s;}
+    .cal-btn:hover,.cal-btn.done{border-color:var(--sage);background:var(--sage-light);color:var(--sage-dark);}
+    .cal-benefit{display:flex;gap:9px;margin-bottom:8px;}
+    .cal-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);margin-top:5px;flex-shrink:0;}
+    .cal-txt{font-size:13px;color:var(--bark-light);line-height:1.5;}
+    .scan-promise{background:var(--bark);border-radius:13px;padding:16px;margin-bottom:16px;text-align:center;}
+    .sp-icon{font-size:38px;margin-bottom:8px;}
+    .sp-title{font-family:var(--font-display);font-size:17px;color:var(--cream);font-weight:400;margin-bottom:4px;}
+    .sp-title em{color:var(--sage-light);font-style:italic;}
+    .sp-sub{font-size:12px;color:var(--bark-light);line-height:1.5;}
+    .scan-boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+    .scan-box{background:var(--warm-white);border:2px dashed var(--cream-dark);border-radius:12px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;}
+    .scan-box:hover{border-color:var(--sage);background:var(--sage-light);}
+    .scan-box.scanned{border-style:solid;border-color:var(--sage);background:var(--sage-light);}
+    .sb-icon{font-size:28px;margin-bottom:6px;display:block;}
+    .sb-label{font-size:13px;font-weight:500;color:var(--bark);margin-bottom:3px;}
+    .sb-sub{font-size:11px;color:var(--bark-light);}
+    .sb-check{display:none;font-size:12px;color:var(--sage-dark);font-weight:500;margin-top:4px;}
+    .scan-box.scanned .sb-check{display:block;}
+    .scan-step{display:flex;gap:11px;align-items:flex-start;margin-bottom:10px;}
+    .ss-num{width:24px;height:24px;border-radius:50%;background:var(--bark);color:white;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:background .3s;}
+    .ss-num.done{background:var(--sage);}
+    .ss-title{font-size:13px;font-weight:500;color:var(--bark);margin-bottom:2px;}
+    .ss-sub{font-size:12px;color:var(--bark-light);line-height:1.4;}
+
+    /* PROCESSING */
+    .proc-screen{background:var(--bark);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 22px;text-align:center;}
+    .proc-orb{width:100px;height:100px;border-radius:50%;background:rgba(196,113,74,.12);display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:22px;position:relative;}
+    .proc-ring{position:absolute;inset:-8px;border-radius:50%;border:3px solid transparent;border-top-color:var(--terra);border-right-color:var(--terra);animation:spin 1.2s linear infinite;}
+    .proc-title{font-family:var(--font-display);font-size:22px;color:var(--cream);font-weight:400;margin-bottom:7px;line-height:1.2;}
+    .proc-title em{color:var(--sage-light);font-style:italic;}
+    .proc-sub{font-size:13px;color:var(--bark-light);line-height:1.6;margin-bottom:26px;}
+    .proc-list{width:100%;text-align:left;}
+    .proc-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+    .proc-row:last-child{border-bottom:none;}
+    .pr-ico{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
+    .pr-lbl{font-size:12px;color:rgba(255,255,255,.55);flex:1;}
+    .pr-st{font-size:11px;font-weight:500;}
+    .ps-done{color:var(--sage);}
+    .ps-working{color:var(--terra);animation:pulse 1s ease-in-out infinite;}
+    .ps-wait{color:rgba(255,255,255,.2);}
+
+    /* SUCCESS */
+    .success-screen{background:var(--bark);flex:1;display:flex;flex-direction:column;}
+    .succ-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 22px 20px;text-align:center;}
+    .succ-icon{font-size:64px;margin-bottom:18px;animation:bounce .6s cubic-bezier(.34,1.56,.64,1) both;}
+    .succ-title{font-family:var(--font-display);font-size:28px;color:var(--cream);font-weight:400;line-height:1.2;margin-bottom:8px;}
+    .succ-title em{color:#F5C842;font-style:italic;}
+    .succ-sub{font-size:13px;color:var(--bark-light);line-height:1.65;margin-bottom:22px;max-width:290px;}
+    .succ-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:100%;margin-bottom:6px;}
+    .ss-stat{background:rgba(255,255,255,.07);border-radius:11px;padding:12px 6px;text-align:center;}
+    .ss-num{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--terra);margin-bottom:2px;}
+    .ss-lbl{font-size:10px;color:var(--bark-light);line-height:1.3;}
+    .brief-prev{margin:0 0 4px;background:rgba(255,255,255,.06);border-radius:13px;padding:14px;border:1px solid rgba(255,255,255,.1);animation:fadeUp .5s ease .3s both;}
+    .bp-eyebrow{font-size:10px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:var(--terra);margin-bottom:5px;}
+    .bp-title{font-family:var(--font-display);font-size:16px;color:var(--cream);font-weight:400;line-height:1.25;margin-bottom:8px;}
+    .bp-title em{color:var(--sage-light);font-style:italic;}
+    .bp-insight{background:rgba(255,255,255,.06);border-left:3px solid var(--sage);border-radius:0 7px 7px 0;padding:8px 10px;font-size:11px;color:var(--cream-dark);line-height:1.55;}
+    .bp-insight strong{color:var(--sage-light);}
+    .succ-bottom{padding:16px 20px 28px;}
+    .succ-cta{width:100%;background:var(--terra);border:none;border-radius:13px;padding:15px;font-family:var(--font-body);font-size:15px;font-weight:500;color:white;cursor:pointer;margin-bottom:9px;transition:all .2s;}
+    .succ-cta:hover{background:var(--terra-dark);}
+    .succ-tour{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:12px;font-family:var(--font-body);font-size:13px;color:var(--bark-light);cursor:pointer;}
+
+    /* DASHBOARD */
+    .main{padding:12px 14px 16px;display:flex;flex-direction:column;gap:11px;}
+    .date-row{display:flex;align-items:center;justify-content:space-between;}
+    .date-line{font-family:var(--font-display);font-size:12px;font-style:italic;color:var(--bark-light);}
+    .mesh-dots{display:flex;align-items:center;}
+    .mesh-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--cream);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:white;margin-left:-6px;cursor:pointer;position:relative;}
+    .mesh-dot:first-child{margin-left:0;}
+    .av1{background:var(--sage);}.av2{background:var(--terra);}.av3{background:var(--bark-light);}.av4{background:var(--sage-dark);}
+    .sring{position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--cream);}
+    .ron{background:var(--sage);}.roff{background:var(--bark-light);}
+    .wb-banner{background:var(--sage-dark);border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:9px;animation:fadeUp .4s ease both;}
+    .wb-ico{font-size:18px;flex-shrink:0;}
+    .wb-txt{flex:1;font-size:12px;color:var(--sage-light);line-height:1.4;}
+    .wb-txt strong{color:var(--cream);}
+    .wb-x{background:none;border:none;color:var(--sage-light);font-size:16px;cursor:pointer;}
+    .briefing-card{background:var(--bark);border-radius:14px;padding:16px;position:relative;overflow:hidden;}
+    .briefing-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:var(--sage-dark);opacity:.18;}
+    .b-tag{font-size:10px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:var(--terra);margin-bottom:6px;}
+    .b-title{font-family:var(--font-display);font-size:18px;font-weight:400;color:var(--cream);line-height:1.2;margin-bottom:10px;}
+    .b-title em{color:var(--sage-light);font-style:italic;}
+    .b-insight{background:rgba(255,255,255,.07);border-left:3px solid var(--sage);border-radius:0 8px 8px 0;padding:9px 11px;margin-bottom:13px;font-size:12px;color:var(--cream-dark);line-height:1.55;}
+    .b-insight strong{color:var(--sage-light);font-weight:500;}
+    .blitz-div{border:none;border-top:1px solid rgba(255,255,255,.1);margin:11px 0 9px;}
+    .blitz-lbl{font-size:10px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:var(--sage-light);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+    .blitz-save{background:rgba(122,158,126,.25);color:var(--sage-light);font-size:10px;padding:2px 8px;border-radius:20px;font-weight:400;text-transform:none;}
+    .blitz-steps{display:flex;flex-direction:column;gap:6px;}
+    .bstep{display:flex;align-items:flex-start;gap:9px;padding:9px;border-radius:8px;cursor:pointer;transition:background .15s;background:rgba(255,255,255,.05);}
+    .bstep:hover{background:rgba(255,255,255,.1);}
+    .bstep.done{opacity:.38;}
+    .bstep-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:white;flex-shrink:0;margin-top:1px;}
+    .tonight .bstep-num{background:var(--terra);}
+    .future .bstep-num{background:var(--sage-dark);}
+    .bstep-body{flex:1;}
+    .bstep-tag{font-size:9px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;margin-bottom:1px;}
+    .tonight .bstep-tag{color:var(--terra);}
+    .future .bstep-tag{color:var(--sage-light);}
+    .bstep-text{font-size:12px;color:var(--cream-dark);line-height:1.35;}
+    .bstep-time{font-size:10px;color:var(--bark-light);margin-top:1px;}
+    .bstep-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+    .bstep-check{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--sage-light);}
+    .bstep.done .bstep-check{background:var(--sage-dark);border-color:var(--sage-dark);}
+    .achip{font-size:9px;background:rgba(255,255,255,.1);color:var(--bark-light);border-radius:8px;padding:2px 6px;white-space:nowrap;cursor:pointer;}
+    .achip.by-other{color:var(--sage-light);background:rgba(122,158,126,.2);}
+    .stock-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:12px;overflow:hidden;}
+    .stock-sum{padding:13px 14px;cursor:pointer;}
+    .stock-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+    .stock-lbl{font-family:var(--font-display);font-size:14px;color:var(--bark);font-weight:400;}
+    .stock-score{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--sage-dark);}
+    .stock-bar-wrap{height:7px;background:var(--cream-dark);border-radius:4px;overflow:hidden;}
+    .stock-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sage) 60%,var(--terra) 100%);width:74%;transition:width .8s ease;}
+    .ledger-drawer{display:none;border-top:1px solid var(--cream-dark);padding:12px 14px;}
+    .ledger-drawer.open{display:block;}
+    .fl-eyebrow{font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--terra);margin-bottom:6px;}
+    .fl-item{display:flex;align-items:center;gap:9px;background:var(--terra-light);border-radius:8px;padding:8px 10px;margin-bottom:5px;}
+    .fl-ico{font-size:16px;}.fl-name{font-size:13px;font-weight:500;color:var(--bark);flex:1;}
+    .fl-pct{font-size:11px;color:var(--terra-dark);font-weight:500;}
+    .fl-act{background:var(--terra);color:white;border:none;border-radius:6px;padding:4px 9px;font-size:11px;font-family:var(--font-body);cursor:pointer;font-weight:500;}
+    .all-eyebrow{font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--bark-light);margin:10px 0 6px;}
+    .lgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+    .litem{background:var(--cream);border:1px solid var(--cream-dark);border-radius:8px;padding:8px;text-align:center;}
+    .lico{font-size:18px;margin-bottom:3px;display:block;}
+    .lname{font-size:10px;font-weight:500;color:var(--bark);margin-bottom:3px;}
+    .lbar{width:100%;height:3px;background:var(--cream-dark);border-radius:2px;overflow:hidden;margin-bottom:2px;}
+    .lfill{height:100%;border-radius:2px;}
+    .lg{background:var(--sage);}.lm{background:var(--bark-light);}.ll{background:var(--terra);}
+    .lpct{font-size:9px;color:var(--bark-light);}
+    .pulse-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:12px;padding:14px 14px 12px;}
+    .pulse-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+    .pulse-ttl{font-family:var(--font-display);font-size:14px;color:var(--bark);font-weight:400;}
+    .pulse-cnt{font-size:11px;color:var(--bark-light);}
+    .conflict-inline{background:var(--terra-light);border:1px solid rgba(196,113,74,.35);border-radius:9px;padding:10px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:flex-start;}
+    .cdot{width:7px;height:7px;border-radius:50%;background:var(--terra);margin-top:4px;flex-shrink:0;animation:pdot 1.5s infinite;}
+    .ctag{font-size:10px;font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--terra-dark);margin-bottom:2px;}
+    .cmsg{font-size:12px;color:var(--bark);line-height:1.4;margin-bottom:7px;}
+    .cbtns{display:flex;gap:7px;}
+    .cyes{background:var(--terra);color:white;border:none;border-radius:6px;padding:5px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font-body);}
+    .cno{background:transparent;color:var(--terra-dark);border:1px solid var(--terra);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font-body);}
+    .pq{font-family:var(--font-display);font-size:15px;font-weight:400;font-style:italic;color:var(--bark);line-height:1.4;margin-bottom:12px;text-align:center;}
+    .pbtns{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+    .pno{background:var(--terra-light);color:var(--terra-dark);border:none;border-radius:8px;padding:11px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;}
+    .pyes{background:var(--sage-light);color:var(--sage-dark);border:none;border-radius:8px;padding:11px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;}
+    .pdots{display:flex;gap:5px;justify-content:center;margin-top:10px;}
+    .pdot{width:6px;height:6px;border-radius:50%;background:var(--cream-dark);}
+    .pdot.on{background:var(--sage);}
+
+    /* GROCERY */
+    .g-section{padding:0 14px;margin-bottom:14px;}
+    .g-eyebrow{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--bark-light);margin:14px 0 8px;}
+    .g-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--cream-dark);}
+    .g-item:last-child{border-bottom:none;}
+    .gck{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--cream-dark);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+    .gck.checked{background:var(--sage);border-color:var(--sage);color:white;font-size:12px;}
+    .gn{flex:1;font-size:14px;color:var(--bark);}
+    .gn.x{text-decoration:line-through;color:var(--bark-light);}
+    .gtag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;}
+    .ta{background:var(--terra-light);color:var(--terra-dark);}
+    .tm{background:var(--cream-dark);color:var(--bark-light);}
+    .gdel{background:none;border:none;color:var(--bark-light);font-size:16px;cursor:pointer;}
+    .shop-btn{background:var(--sage-dark);color:white;border:none;border-radius:999px;padding:8px 14px;font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;}
+    .store-crd{margin:0 14px 14px;background:var(--bark);border-radius:14px;padding:16px;}
+    .store-title{font-family:var(--font-display);font-size:15px;color:var(--cream);font-weight:400;margin-bottom:4px;}
+    .store-sub{font-size:12px;color:var(--bark-light);margin-bottom:12px;line-height:1.5;}
+    .sch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+    .sc{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:7px 13px;font-size:12px;color:var(--cream);cursor:pointer;font-family:var(--font-body);transition:all .2s;}
+    .sc.active{background:var(--terra);border-color:var(--terra);}
+    .aisle-i{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:9px;padding:10px 12px;margin-bottom:7px;}
+    .aisle-b{background:var(--terra);color:white;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:500;white-space:nowrap;}
+    .aisle-t{font-size:13px;color:var(--cream-dark);}
+
+    /* RECIPES */
+    .tab-row{display:flex;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tab{flex:1;padding:10px 6px;text-align:center;font-size:13px;font-weight:500;color:rgba(255,255,255,.4);cursor:pointer;border:none;background:none;font-family:var(--font-body);border-bottom:2px solid transparent;transition:all .2s;}
+    .tab.active{color:var(--cream);border-bottom-color:var(--terra);}
+    .combo-card{margin:14px;background:var(--bark);border-radius:14px;padding:14px 16px;}
+    .cc-eyebrow{font-size:10px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:var(--terra);margin-bottom:5px;}
+    .cc-title{font-family:var(--font-display);font-size:16px;color:var(--cream);font-weight:400;line-height:1.25;margin-bottom:8px;}
+    .cc-title em{color:var(--sage-light);font-style:italic;}
+    .cc-reason{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--cream-dark);margin-bottom:4px;}
+    .ccdot{width:5px;height:5px;border-radius:50%;background:var(--sage);flex-shrink:0;}
+    .cc-btn{background:var(--terra);border:none;border-radius:8px;padding:9px 16px;color:white;font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;margin-top:10px;}
+    .wgrid{padding:0 14px;display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+    .drow{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;}
+    .dlbl{text-align:center;}
+    .dname{font-size:10px;font-weight:500;text-transform:uppercase;color:var(--bark-light);}
+    .dnum{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--bark);}
+    .dlbl.today .dname,.dlbl.today .dnum{color:var(--terra);}
+    .dmeal{background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:11px;padding:10px 12px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:all .2s;min-height:52px;}
+    .dmeal:hover{border-color:var(--sage);}
+    .dmeal.planned{border-color:var(--sage-light);}
+    .dmeal.tonight{border-color:var(--terra);border-width:2px;}
+    .dmeal.empty{border-style:dashed;}
+    .dmi{font-size:22px;flex-shrink:0;}
+    .dminf{flex:1;min-width:0;}
+    .dmn{font-size:13px;font-weight:500;color:var(--bark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dmm{font-size:11px;color:var(--bark-light);}
+    .dmbadge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;flex-shrink:0;}
+    .b-tonight{background:var(--terra);color:white;}
+    .b-planned{background:var(--sage-light);color:var(--sage-dark);}
+    .dm-empty-txt{font-size:13px;color:var(--bark-light);font-style:italic;}
+    .srch{padding:12px 14px 0;}
+    .srch-box{display:flex;align-items:center;gap:8px;background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:11px;padding:10px 13px;}
+    .srch-ico{font-size:14px;color:var(--bark-light);}
+    .srch-inp{flex:1;border:none;background:none;font-family:var(--font-body);font-size:14px;color:var(--bark);outline:none;}
+    .srch-inp::placeholder{color:var(--bark-light);}
+    .fscroll{padding:10px 14px 0;display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;}
+    .fscroll::-webkit-scrollbar{display:none;}
+    .fchip{background:var(--warm-white);border:1.5px solid var(--cream-dark);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--bark);cursor:pointer;font-family:var(--font-body);white-space:nowrap;font-weight:500;transition:all .2s;}
+    .fchip.active{background:var(--bark);color:var(--cream);border-color:var(--bark);}
+    .alpha-sec{padding:0 14px;}
+    .alpha-ltr{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--terra);padding:10px 0 5px;border-bottom:1px solid var(--cream-dark);margin-bottom:4px;}
+    .rrow{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--cream-dark);cursor:pointer;transition:all .15s;}
+    .rrow:last-child{border-bottom:none;}
+    .rrow:hover .rrn{color:var(--terra);}
+    .rrico{font-size:26px;flex-shrink:0;}
+    .rrinf{flex:1;min-width:0;}
+    .rrn{font-size:14px;font-weight:500;color:var(--bark);transition:color .15s;margin-bottom:2px;}
+    .rrm{font-size:11px;color:var(--bark-light);display:flex;gap:8px;flex-wrap:wrap;}
+    .rrtags{display:flex;gap:4px;margin-top:3px;}
+    .rrtag{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:500;}
+    .tp{background:var(--sage-light);color:var(--sage-dark);}
+    .ts{background:#D6E8F7;color:#2A5A8A;}
+    .tq{background:var(--cream-dark);color:var(--bark-light);}
+    .tb{background:var(--terra-light);color:var(--terra-dark);}
+    .rrstk{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;}
+    .sin{background:var(--sage-light);color:var(--sage-dark);}
+    .spart{background:#FDF3C2;color:#856A00;}
+
+    /* INSIGHTS */
+    .igrid{padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px;}
+    .icard{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:14px;padding:13px;}
+    .ieyebrow{font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--bark-light);margin-bottom:5px;}
+    .ival{font-family:var(--font-display);font-size:22px;font-weight:600;margin-bottom:2px;}
+    .ival.green{color:var(--sage-dark);}.ival.terra{color:var(--terra);}
+    .isub{font-size:11px;color:var(--bark-light);line-height:1.4;}
+    .iwide{margin:0 14px 11px;background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:14px;padding:13px;}
+    .iwide-title{font-family:var(--font-display);font-size:15px;color:var(--bark);font-weight:400;margin-bottom:11px;}
+    .brow{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .blbl{font-size:12px;color:var(--bark);width:56px;flex-shrink:0;}
+    .btrack{flex:1;height:7px;background:var(--cream-dark);border-radius:4px;overflow:hidden;}
+    .bfill{height:100%;border-radius:4px;background:var(--sage);}
+    .bval{font-size:11px;color:var(--bark-light);width:32px;text-align:right;}
+    .crow{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+    .cday{font-size:12px;color:var(--bark);width:26px;}
+    .cdots{display:flex;gap:3px;flex:1;}
+    .cdt{width:8px;height:8px;border-radius:50%;background:var(--cream-dark);}
+    .cdt.crash{background:var(--terra);}.cdt.fine{background:var(--sage);}
+    .il-wrap{margin:0 14px 14px;background:var(--bark);border-radius:14px;padding:14px;}
+    .il-title{font-family:var(--font-display);font-size:15px;color:var(--cream);font-weight:400;margin-bottom:3px;}
+    .il-sub{font-size:12px;color:var(--bark-light);margin-bottom:12px;line-height:1.5;}
+    .ilrow{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+    .ilname{font-size:12px;color:var(--cream-dark);width:50px;flex-shrink:0;}
+    .iltrack{flex:1;height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+    .ilfill{height:100%;border-radius:4px;}
+    .iltasks{font-size:11px;color:var(--bark-light);width:38px;text-align:right;}
+
+    /* DRAWER */
+    .drawer-bg{display:none;position:fixed;inset:0;background:rgba(30,15,5,.6);z-index:50;}
+    .drawer-bg.open{display:block;}
+    .settings-drawer{position:fixed;top:0;left:0;bottom:0;width:82%;max-width:300px;background:var(--warm-white);z-index:51;transform:translateX(-100%);transition:transform .3s ease;overflow-y:auto;}
+    .settings-drawer.open{transform:translateX(0);}
+    .dr-top{background:var(--bark);padding:48px 20px 20px;}
+    .dr-av{width:48px;height:48px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;color:white;margin-bottom:10px;}
+    .dr-name{font-family:var(--font-display);font-size:18px;color:var(--cream);font-weight:400;}
+    .dr-role{font-size:12px;color:var(--bark-light);margin-bottom:14px;}
+    .dr-mesh{padding:14px 20px;border-bottom:1px solid var(--cream-dark);}
+    .dr-mesh-lbl{font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--bark-light);margin-bottom:10px;}
+    .drmember{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .drav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:white;flex-shrink:0;}
+    .drinf{flex:1;}
+    .drn{font-size:13px;font-weight:500;color:var(--bark);}
+    .drs{font-size:11px;color:var(--bark-light);}
+    .drtasks{font-size:11px;color:var(--bark-light);text-align:right;}
+    .odot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--sage);margin-right:3px;}
+    .dr-items{padding:8px 0;}
+    .ditem{display:flex;align-items:center;gap:14px;padding:13px 20px;cursor:pointer;transition:background .2s;border:none;background:none;width:100%;text-align:left;font-family:var(--font-body);}
+    .ditem:hover{background:var(--cream);}
+    .ditem-ico{font-size:17px;width:22px;text-align:center;}
+    .ditem-txt{font-size:14px;color:var(--bark);}
+    .dr-div{height:1px;background:var(--cream-dark);margin:4px 0;}
+
+    /* MODALS */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(30,15,5,.72);z-index:100;align-items:flex-end;justify-content:center;}
+    .modal-bg.open{display:flex;}
+    .modal-sheet{background:var(--bark);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:420px;}
+    .m-eyebrow{font-size:10px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:var(--terra);margin-bottom:6px;}
+    .m-title{font-family:var(--font-display);font-size:22px;color:var(--cream);font-weight:400;margin-bottom:4px;}
+    .m-sub{font-size:13px;color:var(--bark-light);margin-bottom:20px;line-height:1.5;}
+    .vibe-triage{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+    .vibe-opt{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;text-align:left;font-family:var(--font-body);width:100%;}
+    .vibe-opt:hover{background:rgba(255,255,255,.13);}
+    .vibe-icon{font-size:22px;flex-shrink:0;}
+    .vot{font-size:14px;font-weight:500;color:var(--cream);margin-bottom:2px;}
+    .vos{font-size:12px;color:var(--bark-light);line-height:1.4;}
+    .sub-panel{display:none;}.sub-panel.open{display:block;}
+    .copt{background:rgba(255,255,255,.07);border-radius:10px;padding:14px;margin-bottom:10px;cursor:pointer;transition:background .2s;}
+    .copt:hover{background:rgba(255,255,255,.13);}
+    .copt-title{font-size:14px;font-weight:500;color:var(--cream);margin-bottom:3px;}
+    .copt-sub{font-size:12px;color:var(--bark-light);}
+    .back-lnk{background:transparent;border:none;color:var(--bark-light);font-family:var(--font-body);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:5px;}
+    .m-close{width:100%;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px;color:var(--bark-light);font-family:var(--font-body);font-size:13px;cursor:pointer;margin-top:4px;}
+    .pivot-item{background:rgba(255,255,255,.07);border-radius:10px;padding:12px 14px;margin-bottom:9px;}
+    .piv-title{font-size:14px;font-weight:500;color:var(--cream);margin-bottom:2px;}
+    .piv-sub{font-size:12px;color:var(--bark-light);}
+    .piv-tag{display:inline-block;font-size:10px;font-weight:500;background:rgba(122,158,126,.25);color:var(--sage-light);border-radius:20px;padding:2px 8px;margin-top:5px;}
+    .assign-sheet{background:var(--warm-white);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:420px;}
+    .as-title{font-family:var(--font-display);font-size:20px;color:var(--bark);font-weight:400;margin-bottom:4px;}
+    .as-sub{font-size:13px;color:var(--bark-light);margin-bottom:18px;}
+    .as-member{display:flex;align-items:center;gap:12px;padding:12px;background:var(--cream);border-radius:11px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;transition:all .2s;}
+    .as-member:hover,.as-member.sel{border-color:var(--sage);}
+    .as-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:white;}
+    .as-name{font-size:14px;font-weight:500;color:var(--bark);}
+    .as-btn{width:100%;background:var(--sage-dark);color:white;border:none;border-radius:10px;padding:13px;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;margin-top:6px;}
+    .as-cancel{width:100%;background:none;border:none;color:var(--bark-light);font-family:var(--font-body);font-size:13px;cursor:pointer;margin-top:8px;}
+
+    /* PAGE HEADERS */
+    .ph{padding:16px 14px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+    .ph-title{font-family:var(--font-display);font-size:22px;font-weight:400;color:var(--bark);}
+    .ph-title em{font-style:italic;color:var(--terra);}
+    .ph-act{background:var(--terra);color:white;border:none;border-radius:999px;padding:7px 14px;font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;}
+  </style>
+</head>
+<body>
+
+<div class="phone-shell">
+  <div class="notch"></div>
+  <div class="screen-area">
+    <div class="app" id="app">
+
+      <!-- ═══════════════════════════════ -->
+      <!-- ONBOARDING VIEW               -->
+      <!-- ═══════════════════════════════ -->
+      <div class="view active" id="viewOnboarding">
+
+        <!-- WELCOME -->
+        <div class="ob-screen active" id="ob0">
+          <div class="welcome-bg">
+            <div>
+              <div class="w-icon">🍳</div>
+              <div class="w-logo">Kitchen<br><span>Commander</span></div>
+              <div class="w-tag">Your household's shared brain for food, energy, and family.</div>
+            </div>
+            <div class="w-pills">
+              <div class="w-pill hi">Built for ADHD households</div>
+              <div class="w-pill">No manual grocery lists</div>
+              <div class="w-pill">Family sync in real time</div>
+              <div class="w-pill">Zero-effort setup</div>
+              <div class="w-pill">Works with Alexa & Google</div>
+            </div>
+            <div style="width:100%;">
+              <button class="w-start" onclick="obGoTo(1)">Let's set up your kitchen →</button>
+              <div class="w-sub">Already have an account? <span onclick="launchDash()">Sign in</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROLE -->
+        <div class="ob-screen" id="ob1">
+          <div class="prog-bar"><div class="prog-fill" style="width:16%"></div></div>
+          <div class="prog-top"><span class="prog-step">Step 1 of 6</span><button class="skip-btn" onclick="obGoTo(2)">Skip</button></div>
+          <div class="ob-body">
+            <div class="ob-eyebrow">Your Role</div>
+            <div class="ob-title">What's your<br><em>role</em> at home?</div>
+            <div class="ob-sub">This shapes your view and what the app prioritizes for you.</div>
+            <div class="role-card" onclick="selRole(this)" id="rg"><div class="role-icon">🏠</div><div><div class="role-name">Guardian / Admin</div><div class="role-desc">I manage meals, shopping, and the household.</div></div><div class="role-check"></div></div>
+            <div class="role-card" onclick="selRole(this)" id="rp"><div class="role-icon">🤝</div><div><div class="role-name">Partner</div><div class="role-desc">I share responsibility. I want to help without extra steps.</div></div><div class="role-check"></div></div>
+            <div class="role-card" onclick="selRole(this)" id="rt"><div class="role-icon">🎒</div><div><div class="role-name">Teen / Young Adult</div><div class="role-desc">I live here too. I want to help and report what I use.</div></div><div class="role-check"></div></div>
+            <button class="btn-p" id="roleNext" disabled onclick="obGoTo(2)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- NAME -->
+        <div class="ob-screen" id="ob2">
+          <div class="prog-bar"><div class="prog-fill" style="width:32%"></div></div>
+          <div class="prog-top"><span class="prog-step">Step 2 of 6</span><button class="skip-btn" onclick="obGoTo(3)">Skip</button></div>
+          <div class="ob-body">
+            <div class="ob-eyebrow">Your Name</div>
+            <div class="ob-title">What should<br>we <em>call you?</em></div>
+            <div class="ob-sub">Just your first name. This is how your family will see you.</div>
+            <input class="text-inp" id="nameInp" type="text" placeholder="Jamie" oninput="updateName(this.value)" maxlength="20">
+            <div class="greet-prev" id="greetPrev">
+              <div class="gp-lbl">Preview</div>
+              <div class="gp-txt">Good morning, <em id="prevName">Jamie</em>. High-density day ahead.</div>
+            </div>
+            <button class="btn-p" onclick="obGoTo(3)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- HOUSEHOLD -->
+        <div class="ob-screen" id="ob3">
+          <div class="prog-bar"><div class="prog-fill" style="width:48%"></div></div>
+          <div class="prog-top"><span class="prog-step">Step 3 of 6</span><button class="skip-btn" onclick="obGoTo(4)">Skip</button></div>
+          <div class="ob-body">
+            <div class="ob-eyebrow">Household Mesh</div>
+            <div class="ob-title">Who's in your<br><em>kitchen?</em></div>
+            <div class="ob-sub">Invite your people. No account setup required to join.</div>
+            <div style="font-size:11px;font-weight:500;letter-spacing:.7px;text-transform:uppercase;color:var(--bark-light);margin-bottom:9px;">Invite a partner</div>
+            <div class="invite-row">
+              <input class="inv-inp" id="partInp" type="email" placeholder="partner@email.com">
+              <button class="inv-btn" onclick="addPartner()">Invite</button>
+            </div>
+            <div id="partChips" style="margin-bottom:14px;"></div>
+            <div style="font-size:11px;font-weight:500;letter-spacing:.7px;text-transform:uppercase;color:var(--bark-light);margin-bottom:9px;">Add dependents · age range only</div>
+            <div id="depList"></div>
+            <button class="add-dep" onclick="addDep()">+ Add a child or dependent</button>
+            <div style="font-size:11px;color:var(--bark-light);line-height:1.5;margin-bottom:14px;">🔒 We only collect age ranges — never names or photos.</div>
+            <button class="btn-p" onclick="obGoTo(4)">Continue →</button>
+            <button class="btn-g" onclick="obGoTo(4)">Just me for now</button>
+          </div>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="ob-screen" id="ob4">
+          <div class="prog-bar"><div class="prog-fill" style="width:64%"></div></div>
+          <div class="prog-top"><span class="prog-step">Step 4 of 6</span><button class="skip-btn" onclick="obGoTo(5)">Skip</button></div>
+          <div class="ob-body">
+            <div class="ob-eyebrow">The Bio-Link</div>
+            <div class="ob-title">Connect your<br><em>calendar.</em></div>
+            <div class="ob-sub">This is how the app knows your day before you do.</div>
+            <div class="cal-card" id="calCard">
+              <div class="cal-icon">📅</div>
+              <div class="cal-title">Google Calendar</div>
+              <div class="cal-sub">Kitchen Commander reads your schedule to predict energy levels and adjust everything automatically.</div>
+              <button class="cal-btn" id="calBtn" onclick="connectCal()"><span id="calBtnIco">🔗</span><span id="calBtnTxt">Connect Google Calendar</span></button>
+            </div>
+            <div class="cal-benefit"><div class="cal-dot"></div><div class="cal-txt">Soccer practice tonight? Dinner timing adjusts automatically.</div></div>
+            <div class="cal-benefit"><div class="cal-dot"></div><div class="cal-txt">Back-to-back meetings? Prep reminder before 11 AM.</div></div>
+            <div class="cal-benefit"><div class="cal-dot"></div><div class="cal-txt">Read-only. We never modify your calendar. Ever.</div></div>
+            <button class="btn-p" style="margin-top:18px;" onclick="obGoTo(5)">Continue →</button>
+            <div style="font-size:12px;color:var(--bark-light);text-align:center;cursor:pointer;margin-top:10px;" onclick="obGoTo(5)">Skip for now</div>
+          </div>
+        </div>
+
+        <!-- SCAN -->
+        <div class="ob-screen" id="ob5">
+          <div class="prog-bar"><div class="prog-fill" style="width:80%"></div></div>
+          <div class="prog-top"><span class="prog-step">Step 5 of 6</span><button class="skip-btn" onclick="obGoTo(6)">Skip</button></div>
+          <div class="ob-body">
+            <div class="ob-eyebrow">The Initial Seed</div>
+            <div class="ob-title">One photo.<br><em>That's it.</em></div>
+            <div class="scan-promise">
+              <div class="sp-icon">🧠</div>
+              <div class="sp-title">No typing. <em>Ever.</em></div>
+              <div class="sp-sub">Snap your fridge and receipt. Vision AI builds your entire stock ledger in under 10 seconds.</div>
+            </div>
+            <div class="scan-boxes">
+              <div class="scan-box" id="fridgeBox" onclick="simScan('fridge')">
+                <span class="sb-icon">🧊</span>
+                <div class="sb-label">Your Fridge</div>
+                <div class="sb-sub">Open door, snap photo</div>
+                <div class="sb-check">✓ Scanned</div>
+              </div>
+              <div class="scan-box" id="receiptBox" onclick="simScan('receipt')">
+                <span class="sb-icon">🧾</span>
+                <div class="sb-label">Last Receipt</div>
+                <div class="sb-sub">Or grocery screenshot</div>
+                <div class="sb-check">✓ Scanned</div>
+              </div>
+            </div>
+            <div class="scan-step"><div class="ss-num" id="sn1">1</div><div><div class="ss-title">Vision AI scans your photos</div><div class="ss-sub">Identifies every item and quantity automatically</div></div></div>
+            <div class="scan-step"><div class="ss-num" id="sn2">2</div><div><div class="ss-title">Stock Ledger built instantly</div><div class="ss-sub">No manual entry. You review — not type.</div></div></div>
+            <div class="scan-step"><div class="ss-num" id="sn3">3</div><div><div class="ss-title">First meal suggestions appear</div><div class="ss-sub">Based on what you already have right now</div></div></div>
+            <button class="btn-p" style="margin-top:16px;" onclick="obGoTo(6)">Build my Stock Ledger →</button>
+          </div>
+        </div>
+
+        <!-- PROCESSING -->
+        <div class="ob-screen" id="ob6">
+          <div class="proc-screen">
+            <div class="proc-orb">🧠<div class="proc-ring"></div></div>
+            <div class="proc-title">Building your<br><em>shared brain…</em></div>
+            <div class="proc-sub">About 10 seconds.<br>Go ahead and put your phone down.</div>
+            <div class="proc-list">
+              <div class="proc-row"><div class="pr-ico">🧊</div><div class="pr-lbl">Scanning fridge photo</div><div class="pr-st ps-done" id="pp1">Done ✓</div></div>
+              <div class="proc-row"><div class="pr-ico">🧾</div><div class="pr-lbl">Reading receipt items</div><div class="pr-st ps-working" id="pp2">Working…</div></div>
+              <div class="proc-row"><div class="pr-ico">📊</div><div class="pr-lbl">Building stock ledger</div><div class="pr-st ps-wait" id="pp3">Waiting</div></div>
+              <div class="proc-row"><div class="pr-ico">🍽️</div><div class="pr-lbl">Generating first meal plan</div><div class="pr-st ps-wait" id="pp4">Waiting</div></div>
+              <div class="proc-row"><div class="pr-ico">📅</div><div class="pr-lbl">Syncing with calendar</div><div class="pr-st ps-wait" id="pp5">Waiting</div></div>
+              <div class="proc-row"><div class="pr-ico">👨‍👩‍👧‍👦</div><div class="pr-lbl">Setting up household mesh</div><div class="pr-st ps-wait" id="pp6">Waiting</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="ob-screen" id="ob7">
+          <div class="success-screen">
+            <div class="succ-top">
+              <div class="succ-icon">🎉</div>
+              <div class="succ-title">Your kitchen<br>is <em>alive.</em></div>
+              <div class="succ-sub">24 items tracked, 3 low-stock alerts, and your first week of meals — all without typing a single word.</div>
+              <div class="succ-stats">
+                <div class="ss-stat"><div class="ss-num">24</div><div class="ss-lbl">Items tracked</div></div>
+                <div class="ss-stat"><div class="ss-num">7</div><div class="ss-lbl">Meals ready</div></div>
+                <div class="ss-stat"><div class="ss-num">3</div><div class="ss-lbl">Low stock</div></div>
+              </div>
+              <div class="brief-prev">
+                <div class="bp-eyebrow">Your First Morning Briefing</div>
+                <div class="bp-title">Good morning, <em id="briefName">Jamie.</em><br>High-density day ahead.</div>
+                <div class="bp-insight">Soccer practice at 5:30 PM detected. <strong>Dinner window is tight — 6:45 PM.</strong> The Blitz is already sequenced.</div>
+              </div>
+            </div>
+            <div class="succ-bottom">
+              <button class="succ-cta" onclick="launchDash()">Go to my Dashboard →</button>
+              <button class="succ-tour" onclick="launchDash()">Quick tour first</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════ -->
+      <!-- DASHBOARD VIEW                -->
+      <!-- ═══════════════════════════════ -->
+      <div class="view" id="viewDash">
+        <div class="topbar">
+          <div class="topbar-left">
+            <button class="menu-btn" onclick="openDrawer()">
+              <div class="menu-line"></div><div class="menu-line"></div><div class="menu-line"></div>
+            </button>
+            <div class="logo">Kitchen <span>Commander</span></div>
+          </div>
+          <button class="crash-btn" onclick="openModal('vibeModal')">
+            <span style="font-size:13px;">🛑</span>
+            <span class="crash-btn-text">Crash Out</span>
+          </button>
+        </div>
+
+        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+          <!-- PAGES -->
+          <div class="page active" id="pageDash">
+            <div class="main">
+              <div class="date-row">
+                <div class="date-line">Thursday, April 30 · Guardian View</div>
+                <div class="mesh-dots">
+                  <div class="mesh-dot av1">JM<div class="sring ron"></div></div>
+                  <div class="mesh-dot av2">SM<div class="sring ron"></div></div>
+                  <div class="mesh-dot av3">K<div class="sring roff"></div></div>
+                  <div class="mesh-dot av4">T<div class="sring ron"></div></div>
+                </div>
+              </div>
+              <div class="wb-banner" id="wbBanner">
+                <div class="wb-ico">🎉</div>
+                <div class="wb-txt"><strong>Welcome to Kitchen Commander!</strong> Your kitchen is set up and ready. Tap anything to explore.</div>
+                <button class="wb-x" onclick="this.closest('.wb-banner').style.display='none'">×</button>
+              </div>
+              <div class="briefing-card">
+                <div class="b-tag">Morning Briefing</div>
+                <div class="b-title">Good morning, <em id="dashName">Jamie.</em><br>High-density day ahead.</div>
+                <div class="b-insight">Soccer practice at 5:30 PM detected. <strong>Dinner window is tight — 6:45 PM at the earliest.</strong> The Blitz is already sequenced for a fast turnaround.</div>
+                <div class="blitz-div"></div>
+                <div class="blitz-lbl"><span>The Blitz · Tonight's Prep</span><span class="blitz-save">Saves 35 min</span></div>
+                <div class="blitz-steps">
+                  <div class="bstep tonight" onclick="toggleStep(this)"><div class="bstep-num">1</div><div class="bstep-body"><div class="bstep-tag">Tonight's dinner</div><div class="bstep-text">Boil pasta · sauce prepped in fridge</div><div class="bstep-time">12 min · active</div></div><div class="bstep-right"><div class="bstep-check"></div></div></div>
+                  <div class="bstep tonight" onclick="toggleStep(this)"><div class="bstep-num">2</div><div class="bstep-body"><div class="bstep-tag">Tonight's dinner</div><div class="bstep-text">Steam broccoli · blend hidden into sauce <span style="font-size:10px;opacity:.7;">(Pulp Mandate)</span></div><div class="bstep-time">8 min · passive</div></div><div class="bstep-right"><div class="bstep-check"></div></div></div>
+                  <div class="bstep future" onclick="toggleStep(this)"><div class="bstep-num">3</div><div class="bstep-body"><div class="bstep-tag">Tomorrow · optional</div><div class="bstep-text">Chop all 3 onions · stir-fry & soup</div><div class="bstep-time">4 min · skip if low energy</div></div><div class="bstep-right"><div class="bstep-check"></div><div class="achip" onclick="event.stopPropagation();openAssign(this)">Assign →</div></div></div>
+                  <div class="bstep future done" onclick="toggleStep(this)"><div class="bstep-num">4</div><div class="bstep-body"><div class="bstep-tag">Tomorrow · assigned to Sam</div><div class="bstep-text">Pre-marinate chicken strips</div><div class="bstep-time">Done by Sam · 3:12 PM</div></div><div class="bstep-right"><div class="bstep-check">✓</div><div class="achip by-other">Sam ✓</div></div></div>
+                </div>
+              </div>
+              <div class="stock-card">
+                <div class="stock-sum" onclick="toggleLedger()">
+                  <div class="stock-top"><div class="stock-lbl">Stock Health</div><div class="stock-score">74%</div></div>
+                  <div class="stock-bar-wrap"><div class="stock-bar-fill"></div></div>
+                </div>
+                <div class="ledger-drawer" id="ledgerDrawer">
+                  <div class="fl-eyebrow">Flagged Low</div>
+                  <div class="fl-item"><div class="fl-ico">🥛</div><div class="fl-name">Milk</div><div class="fl-pct">18% · Critical</div><button class="fl-act">+ Cart</button></div>
+                  <div class="fl-item"><div class="fl-ico">🍗</div><div class="fl-name">Chicken</div><div class="fl-pct">22% · Low</div><button class="fl-act">+ Cart</button></div>
+                  <div class="fl-item"><div class="fl-ico">🧻</div><div class="fl-name">Paper Towels</div><div class="fl-pct">10% · Critical</div><button class="fl-act">+ Cart</button></div>
+                  <div class="all-eyebrow">All Items</div>
+                  <div class="lgrid">
+                    <div class="litem"><span class="lico">🥚</span><div class="lname">Eggs</div><div class="lbar"><div class="lfill lm" style="width:50%"></div></div><div class="lpct">50%</div></div>
+                    <div class="litem"><span class="lico">🧀</span><div class="lname">Cheese</div><div class="lbar"><div class="lfill lg" style="width:80%"></div></div><div class="lpct">80%</div></div>
+                    <div class="litem"><span class="lico">🧅</span><div class="lname">Onions</div><div class="lbar"><div class="lfill lg" style="width:90%"></div></div><div class="lpct">90%</div></div>
+                    <div class="litem"><span class="lico">🥦</span><div class="lname">Broccoli</div><div class="lbar"><div class="lfill lm" style="width:45%"></div></div><div class="lpct">45%</div></div>
+                    <div class="litem"><span class="lico">🍝</span><div class="lname">Pasta</div><div class="lbar"><div class="lfill lg" style="width:85%"></div></div><div class="lpct">85%</div></div>
+                    <div class="litem"><span class="lico">🥫</span><div class="lname">Sauce</div><div class="lbar"><div class="lfill lg" style="width:70%"></div></div><div class="lpct">70%</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="pulse-card">
+                <div class="pulse-hdr"><div class="pulse-ttl">Audit Pulse</div><div class="pulse-cnt" id="pulseCount">1 of 4</div></div>
+                <div class="conflict-inline" id="conflictCard">
+                  <div class="cdot"></div>
+                  <div><div class="ctag">Logic Conflict · Truth Engine</div><div class="cmsg">Tyler scanned a Milk receipt — but you marked it empty. Did it make it to the fridge?</div><div class="cbtns"><button class="cyes" onclick="resolveConflict()">Yes, it's in</button><button class="cno" onclick="resolveConflict()">Not yet</button></div></div>
+                </div>
+                <div id="pulseQWrap" style="display:none;">
+                  <div class="pq" id="pulseQ">"Is the Greek Yogurt still about half-full?"</div>
+                  <div class="pbtns"><button class="pno" onclick="nextPulse()">← No, it's low</button><button class="pyes" onclick="nextPulse()">Yes, still good →</button></div>
+                </div>
+                <div class="pdots"><div class="pdot on"></div><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GROCERY PAGE -->
+          <div class="page" id="pageGrocery">
+            <div class="ph"><div class="ph-title">Grocery <em>List</em></div><button class="shop-btn" onclick="toggleShopping()">🛒 Shopping Mode</button></div>
+            <div id="normalGrocery">
+              <div class="g-section">
+                <div class="g-eyebrow">App Suggestions</div>
+                <div class="g-item"><div class="gck" onclick="toggleCheck(this)"></div><div class="gn">Whole Milk (1 gal)</div><div class="gtag ta">Auto</div><button class="gdel" onclick="this.closest('.g-item').remove()">×</button></div>
+                <div class="g-item"><div class="gck" onclick="toggleCheck(this)"></div><div class="gn">Chicken Breast (2 lbs)</div><div class="gtag ta">Auto</div><button class="gdel" onclick="this.closest('.g-item').remove()">×</button></div>
+                <div class="g-item"><div class="gck" onclick="toggleCheck(this)"></div><div class="gn">Paper Towels</div><div class="gtag ta">Auto</div><button class="gdel" onclick="this.closest('.g-item').remove()">×</button></div>
+                <div class="g-item"><div class="gck" onclick="toggleCheck(this)"></div><div class="gn">Greek Yogurt</div><div class="gtag ta">Auto</div><button class="gdel" onclick="this.closest('.g-item').remove()">×</button></div>
+              </div>
+              <div class="g-section">
+                <div class="g-eyebrow">Your Items</div>
+                <div class="g-item"><div class="gck checked" onclick="toggleCheck(this)">✓</div><div class="gn x">Orange Juice</div><div class="gtag tm">Added</div><button class="gdel" onclick="this.closest('.g-item').remove()">×</button></div>
+                <div class="g-item"><div class="gck" onclick="toggleCheck(this)"></div><div class="gn">Bread</div><div class="gtag tm">Added</div><button class="gdel" onclick="this.closest('.g-item').remove()">×</button></div>
+              </div>
+            </div>
+            <div id="shoppingMode" style="display:none;">
+              <div class="store-crd">
+                <div class="store-title">Shopping Mode</div>
+                <div class="store-sub">Select your store — sorted by aisle to keep you focused.</div>
+                <div class="sch"><button class="sc active" onclick="setStore(this)">Walmart</button><button class="sc" onclick="setStore(this)">Kroger</button><button class="sc" onclick="setStore(this)">Aldi</button><button class="sc" onclick="setStore(this)">Target</button></div>
+                <div class="aisle-i"><div class="aisle-b">Aisle 3 · Bay 2</div><div class="aisle-t">Whole Milk (1 gal)</div></div>
+                <div class="aisle-i"><div class="aisle-b">Aisle 3 · Bay 5</div><div class="aisle-t">Greek Yogurt</div></div>
+                <div class="aisle-i"><div class="aisle-b">Aisle 7 · Bay 1</div><div class="aisle-t">Chicken Breast (2 lbs)</div></div>
+                <div class="aisle-i"><div class="aisle-b">Aisle 11 · Bay 4</div><div class="aisle-t">Paper Towels</div></div>
+                <div class="aisle-i"><div class="aisle-b">Aisle 12 · Bay 2</div><div class="aisle-t">Bread</div></div>
+                <button style="width:100%;background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,255,255,.2);border-radius:10px;padding:12px;font-family:var(--font-body);font-size:13px;color:var(--bark-light);cursor:pointer;margin-top:8px;">📷 Scan receipt to update pantry →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECIPES PAGE -->
+          <div class="page" id="pageRecipes">
+            <div class="topbar" style="position:relative;">
+              <div class="logo">Kitchen <span>Commander</span></div>
+              <button class="ph-act">+ Add Recipe</button>
+            </div>
+            <div class="tab-row">
+              <button class="tab active" id="tabPlan" onclick="switchRecipeTab('plan')">📅 Meal Planner</button>
+              <button class="tab" id="tabBook" onclick="switchRecipeTab('book')">📖 Recipe Book</button>
+            </div>
+            <div id="recTabPlan" style="overflow-y:auto;">
+              <div class="combo-card">
+                <div class="cc-eyebrow">AI Meal Combo</div>
+                <div class="cc-title">This week <em>reduces waste & prep</em></div>
+                <div class="cc-reason"><div class="ccdot"></div>Onions chopped once — used in 3 meals</div>
+                <div class="cc-reason"><div class="ccdot"></div>Chicken batch-cooked Sunday for 3 meals</div>
+                <div class="cc-reason"><div class="ccdot"></div>Uses broccoli & lemons before they expire</div>
+                <button class="cc-btn" onclick="applyCombo()">Apply this plan ✓</button>
+              </div>
+              <div class="wgrid">
+                <div class="drow"><div class="dlbl today"><div class="dname">Thu</div><div class="dnum">30</div></div><div class="dmeal tonight"><div class="dmi">🍝</div><div class="dminf"><div class="dmn">Pasta with Hidden Veggie Sauce</div><div class="dmm">20 min · All in stock</div></div><div class="dmbadge b-tonight">Tonight</div></div></div>
+                <div class="drow"><div class="dlbl"><div class="dname">Fri</div><div class="dnum">1</div></div><div class="dmeal planned"><div class="dmi">🌮</div><div class="dminf"><div class="dmn">Friday Tacos</div><div class="dmm">25 min · Need: Tortillas</div></div><div class="dmbadge b-planned">Planned</div></div></div>
+                <div class="drow"><div class="dlbl"><div class="dname">Sat</div><div class="dnum">2</div></div><div class="dmeal planned"><div class="dmi">🍗</div><div class="dminf"><div class="dmn">Sheet Pan Chicken & Veg</div><div class="dmm">35 min · All in stock</div></div><div class="dmbadge b-planned">Planned</div></div></div>
+                <div class="drow"><div class="dlbl"><div class="dname">Sun</div><div class="dnum">3</div></div><div class="dmeal planned"><div class="dmi">🥘</div><div class="dminf"><div class="dmn">One-Pot Veggie Soup</div><div class="dmm">30 min · Uses broccoli</div></div><div class="dmbadge b-planned">Planned</div></div></div>
+                <div class="drow"><div class="dlbl"><div class="dname">Mon</div><div class="dnum">4</div></div><div class="dmeal planned"><div class="dmi">🍗</div><div class="dminf"><div class="dmn">Chicken Stir-Fry (leftovers)</div><div class="dmm">15 min · Uses Sunday chicken</div></div><div class="dmbadge b-planned">Planned</div></div></div>
+                <div class="drow"><div class="dlbl"><div class="dname">Tue</div><div class="dnum">5</div></div><div class="dmeal empty" onclick="pickMeal(this)"><div class="dmi">➕</div><div class="dm-empty-txt">Tap to pick a meal</div></div></div>
+                <div class="drow"><div class="dlbl"><div class="dname">Wed</div><div class="dnum">6</div></div><div class="dmeal empty" onclick="pickMeal(this)"><div class="dmi">➕</div><div class="dm-empty-txt">Tap to pick a meal</div></div></div>
+              </div>
+            </div>
+            <div id="recTabBook" style="display:none;overflow-y:auto;">
+              <div class="srch"><div class="srch-box"><div class="srch-ico">🔍</div><input class="srch-inp" placeholder="Search recipes…" oninput="filterRecs(this.value)"></div></div>
+              <div class="fscroll">
+                <button class="fchip active" onclick="setFilt(this)">All</button>
+                <button class="fchip" onclick="setFilt(this)">✅ In stock</button>
+                <button class="fchip" onclick="setFilt(this)">⚡ Under 20 min</button>
+                <button class="fchip" onclick="setFilt(this)">🥦 Pulp Mandate</button>
+                <button class="fchip" onclick="setFilt(this)">👶 Kid-safe</button>
+              </div>
+              <div class="alpha-sec" id="recList">
+                <div class="alpha-ltr">C</div>
+                <div class="rrow"><div class="rrico">🍗</div><div class="rrinf"><div class="rrn">Chicken Stir-Fry</div><div class="rrm"><span>⏱ 15 min</span><span>👥 4 srv</span></div><div class="rrtags"><span class="rrtag tq">Quick</span><span class="rrtag ts">Kid-safe</span></div></div><div><span class="rrstk sin">In stock</span></div></div>
+                <div class="alpha-ltr">F</div>
+                <div class="rrow"><div class="rrico">🌮</div><div class="rrinf"><div class="rrn">Friday Tacos</div><div class="rrm"><span>⏱ 25 min</span><span>👥 4 srv</span></div><div class="rrtags"><span class="rrtag ts">Kid-safe</span></div></div><div><span class="rrstk spart">Need 1</span></div></div>
+                <div class="alpha-ltr">O</div>
+                <div class="rrow"><div class="rrico">🥘</div><div class="rrinf"><div class="rrn">One-Pot Veggie Soup</div><div class="rrm"><span>⏱ 30 min</span><span>👥 6 srv</span></div><div class="rrtags"><span class="rrtag tp">Pulp Mandate</span></div></div><div><span class="rrstk sin">In stock</span></div></div>
+                <div class="alpha-ltr">P</div>
+                <div class="rrow"><div class="rrico">🍝</div><div class="rrinf"><div class="rrn">Pasta with Hidden Veggie Sauce</div><div class="rrm"><span>⏱ 20 min</span><span>👥 4 srv</span></div><div class="rrtags"><span class="rrtag tp">Pulp Mandate</span><span class="rrtag tb">Blitz ready</span></div></div><div><span class="rrstk sin">In stock</span></div></div>
+                <div class="alpha-ltr">S</div>
+                <div class="rrow"><div class="rrico">🥚</div><div class="rrinf"><div class="rrn">Scrambled Eggs & Toast</div><div class="rrm"><span>⏱ 8 min</span><span>👥 2 srv</span></div><div class="rrtags"><span class="rrtag tq">Crash Out</span></div></div><div><span class="rrstk sin">In stock</span></div></div>
+                <div class="rrow"><div class="rrico">🍗</div><div class="rrinf"><div class="rrn">Sheet Pan Chicken & Veg</div><div class="rrm"><span>⏱ 35 min</span><span>👥 4 srv</span></div><div class="rrtags"><span class="rrtag tp">Pulp Mandate</span></div></div><div><span class="rrstk sin">In stock</span></div></div>
+              </div>
+              <div style="height:20px;"></div>
+            </div>
+          </div>
+
+          <!-- INSIGHTS PAGE -->
+          <div class="page" id="pageInsights">
+            <div class="ph"><div class="ph-title">Household <em>Insights</em></div></div>
+            <div style="overflow-y:auto;">
+              <div class="igrid">
+                <div class="icard"><div class="ieyebrow">Food Waste Saved</div><div class="ival green">$47</div><div class="isub">this month vs. avg</div></div>
+                <div class="icard"><div class="ieyebrow">Eating Out Less</div><div class="ival green">$112</div><div class="isub">saved vs. last month</div></div>
+                <div class="icard"><div class="ieyebrow">Crash Out Days</div><div class="ival terra">4</div><div class="isub">Tue & Thu pattern</div></div>
+                <div class="icard"><div class="ieyebrow">Total Saved</div><div class="ival green">$159</div><div class="isub">April · vs. baseline</div></div>
+              </div>
+              <div class="iwide">
+                <div class="iwide-title">Spending by Category</div>
+                <div class="brow"><div class="blbl">Produce</div><div class="btrack"><div class="bfill" style="width:72%"></div></div><div class="bval">$84</div></div>
+                <div class="brow"><div class="blbl">Protein</div><div class="btrack"><div class="bfill" style="width:58%;background:var(--terra)"></div></div><div class="bval">$67</div></div>
+                <div class="brow"><div class="blbl">Dairy</div><div class="btrack"><div class="bfill" style="width:40%"></div></div><div class="bval">$46</div></div>
+                <div class="brow"><div class="blbl">Pantry</div><div class="btrack"><div class="bfill" style="width:30%;background:var(--bark-light)"></div></div><div class="bval">$35</div></div>
+              </div>
+              <div class="iwide">
+                <div class="iwide-title">Crash Out Pattern</div>
+                <div style="font-size:12px;color:var(--bark-light);margin-bottom:10px;">Tue & Thu correlate with late work days</div>
+                <div class="crow"><div class="cday">Mon</div><div class="cdots"><div class="cdt fine"></div><div class="cdt fine"></div><div class="cdt fine"></div><div class="cdt fine"></div></div></div>
+                <div class="crow"><div class="cday">Tue</div><div class="cdots"><div class="cdt crash"></div><div class="cdt fine"></div><div class="cdt crash"></div><div class="cdt crash"></div></div></div>
+                <div class="crow"><div class="cday">Wed</div><div class="cdots"><div class="cdt fine"></div><div class="cdt fine"></div><div class="cdt fine"></div><div class="cdt fine"></div></div></div>
+                <div class="crow"><div class="cday">Thu</div><div class="cdots"><div class="cdt fine"></div><div class="cdt crash"></div><div class="cdt fine"></div><div class="cdt crash"></div></div></div>
+                <div class="crow"><div class="cday">Fri</div><div class="cdots"><div class="cdt fine"></div><div class="cdt fine"></div><div class="cdt fine"></div><div class="cdt fine"></div></div></div>
+                <div style="font-size:11px;color:var(--sage-dark);margin-top:10px;font-weight:500;">💡 Pre-plan Tue & Thu as Crash Out nights</div>
+              </div>
+              <div class="il-wrap">
+                <div class="il-title">Invisible Load Tracker</div>
+                <div class="il-sub">Making household work visible, week by week.</div>
+                <div class="ilrow"><div class="ilname">Jamie</div><div class="iltrack"><div class="ilfill" style="width:78%;background:var(--terra);"></div></div><div class="iltasks">31 tasks</div></div>
+                <div class="ilrow"><div class="ilname">Sam</div><div class="iltrack"><div class="ilfill" style="width:42%;background:var(--sage);"></div></div><div class="iltasks">17 tasks</div></div>
+                <div class="ilrow"><div class="ilname">Tyler</div><div class="iltrack"><div class="ilfill" style="width:18%;background:var(--bark-light);"></div></div><div class="iltasks">7 tasks</div></div>
+                <div style="font-size:11px;color:var(--bark-light);margin-top:10px;line-height:1.5;">Jamie is carrying 64% of household prep load this month.</div>
+              </div>
+              <div style="height:20px;"></div>
+            </div>
+          </div>
+
+          <!-- SCAN PAGE -->
+          <div class="page" id="pageScan">
+            <div style="background:var(--bark);flex:1;display:flex;flex-direction:column;">
+              <div style="padding:16px 18px;"><div style="font-family:var(--font-display);font-size:18px;color:var(--cream);font-weight:400;">Vision <em style="color:var(--sage-light);font-style:italic;">AI Scan</em></div><div style="font-size:13px;color:var(--bark-light);margin-top:4px;">Point, tap, done. No typing ever.</div></div>
+              <div style="padding:0 18px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 16px;cursor:pointer;" onclick="navTo('Dash')"><div style="font-size:26px;">🧊</div><div><div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:2px;">Scan my fridge</div><div style="font-size:12px;color:var(--bark-light);">AI identifies every item and quantity</div></div></div>
+                <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 16px;cursor:pointer;" onclick="navTo('Dash')"><div style="font-size:26px;">🧾</div><div><div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:2px;">Scan a receipt</div><div style="font-size:12px;color:var(--bark-light);">Paper receipt or grocery app screenshot</div></div></div>
+                <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 16px;cursor:pointer;" onclick="navTo('Dash')"><div style="font-size:26px;">🗄️</div><div><div style="font-size:14px;font-weight:500;color:var(--cream);margin-bottom:2px;">Scan my pantry</div><div style="font-size:12px;color:var(--bark-light);">Shelves, cabinets, dry goods</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <button class="nav-item active" id="navDash" onclick="navTo('Dash')"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></button>
+          <button class="nav-item" id="navGrocery" onclick="navTo('Grocery')"><div class="nav-icon">🛒</div><div class="nav-label">Grocery</div><div class="nav-badge">5</div></button>
+          <button class="nav-item" id="navRecipes" onclick="navTo('Recipes')"><div class="nav-icon">📖</div><div class="nav-label">Recipes</div></button>
+          <button class="nav-item" id="navInsights" onclick="navTo('Insights')"><div class="nav-icon">📊</div><div class="nav-label">Insights</div></button>
+          <button class="nav-item" id="navScan" onclick="navTo('Scan')"><div class="nav-icon">📷</div><div class="nav-label">Scan</div></button>
+        </div>
+      </div>
+
+      <!-- DRAWER -->
+      <div class="drawer-bg" id="drawerBg" onclick="closeDrawer()"></div>
+      <div class="settings-drawer" id="settingsDrawer">
+        <div class="dr-top">
+          <div class="dr-av">JM</div>
+          <div class="dr-name" id="drawerName">Jamie</div>
+          <div class="dr-role">Guardian · Admin</div>
+        </div>
+        <div class="dr-mesh">
+          <div class="dr-mesh-lbl">Family Mesh</div>
+          <div class="dr-mesh-row">
+            <div class="drmember"><div class="drav av1">JM</div><div class="drinf"><div class="drn">Jamie</div><div class="drs"><span class="odot"></span>Active now</div></div><div class="drtasks">31 tasks</div></div>
+            <div class="drmember"><div class="drav av2">SM</div><div class="drinf"><div class="drn">Sam</div><div class="drs"><span class="odot"></span>Active now</div></div><div class="drtasks">17 tasks</div></div>
+            <div class="drmember"><div class="drav av3">K</div><div class="drinf"><div class="drn">Kayla</div><div class="drs" style="color:var(--bark-light)">At school</div></div><div class="drtasks">3 tasks</div></div>
+            <div class="drmember"><div class="drav av4">T</div><div class="drinf"><div class="drn">Tyler</div><div class="drs"><span class="odot"></span>Active now</div></div><div class="drtasks">7 tasks</div></div>
+          </div>
+        </div>
+        <div class="dr-items">
+          <button class="ditem"><div class="ditem-ico">👨‍👩‍👧‍👦</div><div class="ditem-txt">Household & Members</div></button>
+          <button class="ditem"><div class="ditem-ico">🔔</div><div class="ditem-txt">Notifications</div></button>
+          <button class="ditem"><div class="ditem-ico">🧠</div><div class="ditem-txt">Bio-Logic Settings</div></button>
+          <button class="ditem"><div class="ditem-ico">🛒</div><div class="ditem-txt">Store Preferences</div></button>
+          <button class="ditem"><div class="ditem-ico">📅</div><div class="ditem-txt">Calendar Integration</div></button>
+          <button class="ditem"><div class="ditem-ico">🤫</div><div class="ditem-txt">Sensory & Dietary Filters</div></button>
+          <button class="ditem"><div class="ditem-ico">🔊</div><div class="ditem-txt">Smart Home / Voice</div></button>
+          <div class="dr-div"></div>
+          <button class="ditem"><div class="ditem-ico">💳</div><div class="ditem-txt">Subscription & Billing</div></button>
+          <button class="ditem"><div class="ditem-ico">🔒</div><div class="ditem-txt">Privacy & Data</div></button>
+          <button class="ditem"><div class="ditem-ico">❓</div><div class="ditem-txt">Help & Support</div></button>
+          <div class="dr-div"></div>
+          <button class="ditem"><div class="ditem-ico">👋</div><div class="ditem-txt" style="color:var(--terra);">Sign Out</div></button>
+        </div>
+      </div>
+
+      <!-- CRASH OUT MODAL -->
+      <div class="modal-bg" id="vibeModal" onclick="if(event.target===this)closeModals()">
+        <div class="modal-sheet">
+          <div id="triageView">
+            <div class="m-eyebrow">Energy Check</div>
+            <div class="m-title">How are you feeling?</div>
+            <div class="m-sub">No wrong answers. The app will adjust.</div>
+            <div class="vibe-triage">
+              <button class="vibe-opt" onclick="selectVibe('crashed')"><div class="vibe-icon">😮‍💨</div><div><div class="vot">I'm running on empty</div><div class="vos">Show me zero-effort options & delivery</div></div></button>
+              <button class="vibe-opt" onclick="selectVibe('pivot')"><div class="vibe-icon">⚡</div><div><div class="vot">Pivot tonight's plan</div><div class="vos">Something quick with what we have</div></div></button>
+              <button class="vibe-opt" onclick="selectVibe('takeout')"><div class="vibe-icon">🛵</div><div><div class="vot">Just find me takeout</div><div class="vos">Vetted delivery options nearby</div></div></button>
+            </div>
+            <button class="m-close" onclick="closeModals()">Actually, I've got this tonight</button>
+          </div>
+          <div id="crashedView" class="sub-panel">
+            <button class="back-lnk" onclick="backToTriage()">← back</button>
+            <div class="m-eyebrow">Crash Out Mode</div><div class="m-title">You're covered.</div><div class="m-sub">Zero decisions required.</div>
+            <div class="copt"><div class="copt-title">Frozen Mac & Cheese + applesauce</div><div class="copt-sub">Zero thaw · In freezer · 4 min</div></div>
+            <div class="copt"><div class="copt-title">Cereal night — everyone picks their own</div><div class="copt-sub">Zero cook · Low sensory · Kid-approved</div></div>
+            <button class="m-close" onclick="closeModals()">Done</button>
+          </div>
+          <div id="pivotView" class="sub-panel">
+            <button class="back-lnk" onclick="backToTriage()">← back</button>
+            <div class="m-eyebrow">Quick Pivot</div><div class="m-title">Here's what works tonight.</div><div class="m-sub">Using what's in your kitchen.</div>
+            <div class="pivot-item"><div class="piv-title">Pasta with jar sauce + broccoli</div><div class="piv-sub">15 min · no eggs needed</div><div class="piv-tag">Pulp Mandate ready</div></div>
+            <div class="pivot-item"><div class="piv-title">Quesadillas + cheese</div><div class="piv-sub">10 min · kids love it</div><div class="piv-tag">Sensory-safe</div></div>
+            <button class="m-close" onclick="closeModals()">Let's do one of these</button>
+          </div>
+          <div id="takeoutView" class="sub-panel">
+            <button class="back-lnk" onclick="backToTriage()">← back</button>
+            <div class="m-eyebrow">Delivery</div><div class="m-title">Pre-vetted for your crew.</div><div class="m-sub">Filters already applied.</div>
+            <div class="copt"><div class="copt-title">Walmart Grocery Delivery</div><div class="copt-sub">Usually under 1 hr</div></div>
+            <div class="copt"><div class="copt-title">Local Restaurants ↗</div><div class="copt-sub">Based on past orders your family liked</div></div>
+            <button class="m-close" onclick="closeModals()">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSIGN MODAL -->
+      <div class="modal-bg" id="assignModal" onclick="if(event.target===this)closeAssign()">
+        <div class="assign-sheet">
+          <div class="as-title">Assign this task</div>
+          <div class="as-sub">Who has the energy for this one?</div>
+          <div class="as-member" onclick="selMember(this)"><div class="as-av av2">SM</div><div class="as-name">Sam</div></div>
+          <div class="as-member" onclick="selMember(this)"><div class="as-av av4">T</div><div class="as-name">Tyler</div></div>
+          <div class="as-member" onclick="selMember(this)"><div class="as-av av3">K</div><div class="as-name">Kayla</div></div>
+          <button class="as-btn" onclick="confirmAssign()">Assign Task</button>
+          <button class="as-cancel" onclick="closeAssign()">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="desktop-hint">Kitchen Commander Prototype · Tap to explore</div>
+
+<script>
+// ── ONBOARDING ──
+var obCurrent = 0;
+var depCount = 0;
+
+function obGoTo(n) {
+  document.getElementById('ob'+obCurrent).classList.remove('active');
+  obCurrent = n;
+  document.getElementById('ob'+n).classList.add('active');
+  if(n === 6) startProc();
+}
+
+function selRole(card) {
+  document.querySelectorAll('.role-card').forEach(function(c){c.classList.remove('selected');c.querySelector('.role-check').textContent='';});
+  card.classList.add('selected');
+  card.querySelector('.role-check').textContent='✓';
+  document.getElementById('roleNext').disabled=false;
+}
+
+function updateName(val) {
+  var prev=document.getElementById('greetPrev');
+  if(val.trim()){prev.style.display='block';document.getElementById('prevName').textContent=val.trim();}
+  else{prev.style.display='none';}
+}
+
+function addPartner(){
+  var val=document.getElementById('partInp').value.trim();if(!val)return;
+  var chips=document.getElementById('partChips');
+  var chip=document.createElement('span');chip.className='chip';
+  chip.innerHTML=val+' <button class="chip-x" onclick="this.parentElement.remove()">×</button>';
+  chips.appendChild(chip);document.getElementById('partInp').value='';
+}
+
+function addDep(){
+  depCount++;
+  var list=document.getElementById('depList');
+  var row=document.createElement('div');row.className='dep-row';
+  row.innerHTML='<div class="dep-lbl">Dependent '+depCount+'</div><select class="dep-age"><option>Under 5</option><option>5–8</option><option>9–12</option><option>13–17</option><option>18+</option></select><button class="dep-x" onclick="this.parentElement.remove()">×</button>';
+  list.appendChild(row);
+}
+
+function connectCal(){
+  document.getElementById('calBtnIco').textContent='✓';
+  document.getElementById('calBtnTxt').textContent='Google Calendar connected';
+  document.getElementById('calBtn').classList.add('done');
+  document.getElementById('calCard').classList.add('connected');
+}
+
+function simScan(type){
+  var box=document.getElementById(type==='fridge'?'fridgeBox':'receiptBox');
+  box.classList.add('scanned');
+  var n=type==='fridge'?'sn1':'sn2';
+  var el=document.getElementById(n);
+  el.classList.add('done');el.textContent='✓';
+}
+
+function startProc(){
+  var seq=[
+    {id:'pp2',delay:1200,cls:'ps-done',txt:'Done ✓'},
+    {id:'pp3',delay:1200,cls:'ps-working',txt:'Working…'},
+    {id:'pp3',delay:2800,cls:'ps-done',txt:'Done ✓'},
+    {id:'pp4',delay:2800,cls:'ps-working',txt:'Working…'},
+    {id:'pp4',delay:4200,cls:'ps-done',txt:'Done ✓'},
+    {id:'pp5',delay:4200,cls:'ps-working',txt:'Working…'},
+    {id:'pp5',delay:5600,cls:'ps-done',txt:'Done ✓'},
+    {id:'pp6',delay:5600,cls:'ps-working',txt:'Working…'},
+    {id:'pp6',delay:7000,cls:'ps-done',txt:'Done ✓'},
+  ];
+  seq.forEach(function(s){setTimeout(function(){var el=document.getElementById(s.id);if(el){el.className='pr-st '+s.cls;el.textContent=s.txt;}},s.delay);});
+  setTimeout(function(){obGoTo(7);},7800);
+}
+
+function launchDash(){
+  var name=document.getElementById('nameInp').value.trim()||'Jamie';
+  document.getElementById('dashName').textContent=name+'.';
+  document.getElementById('drawerName').textContent=name;
+  document.getElementById('briefName').textContent=name+'.';
+  document.getElementById('viewOnboarding').classList.remove('active');
+  document.getElementById('viewDash').classList.add('active');
+}
+
+// ── DASHBOARD NAV ──
+var curPage='Dash';
+function navTo(p){
+  document.getElementById('page'+curPage).classList.remove('active');
+  document.getElementById('nav'+curPage).classList.remove('active');
+  curPage=p;
+  document.getElementById('page'+p).classList.add('active');
+  document.getElementById('nav'+p).classList.add('active');
+}
+
+// ── DRAWER ──
+function openDrawer(){document.getElementById('settingsDrawer').classList.add('open');document.getElementById('drawerBg').classList.add('open');}
+function closeDrawer(){document.getElementById('settingsDrawer').classList.remove('open');document.getElementById('drawerBg').classList.remove('open');}
+
+// ── MODALS ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModals(){document.querySelectorAll('.modal-bg').forEach(function(m){m.classList.remove('open');});backToTriage();}
+function backToTriage(){document.getElementById('triageView').style.display='block';document.querySelectorAll('.sub-panel').forEach(function(p){p.classList.remove('open');});}
+function selectVibe(t){document.getElementById('triageView').style.display='none';document.getElementById(t+'View').classList.add('open');}
+
+// ── DASHBOARD ──
+var ledgerOpen=false;
+function toggleLedger(){ledgerOpen=!ledgerOpen;document.getElementById('ledgerDrawer').classList.toggle('open',ledgerOpen);}
+
+var pulseIdx=0;
+var pulseQs=['"Is the Greek Yogurt still about half-full?"','"Did you finish the OJ this morning?"','"Is there still pasta in the pantry?"'];
+function resolveConflict(){document.getElementById('conflictCard').style.display='none';document.getElementById('pulseQWrap').style.display='block';document.getElementById('pulseCount').textContent='2 of 4';document.querySelectorAll('.pdot')[1].classList.add('on');}
+function nextPulse(){pulseIdx++;var dots=document.querySelectorAll('.pdot');if(pulseIdx<pulseQs.length){document.getElementById('pulseQ').textContent=pulseQs[pulseIdx];document.getElementById('pulseCount').textContent=(pulseIdx+2)+' of 4';if(dots[pulseIdx+1])dots[pulseIdx+1].classList.add('on');}else{document.getElementById('pulseQWrap').innerHTML='<div style="text-align:center;padding:10px 0;font-family:var(--font-display);font-size:15px;color:var(--sage-dark);font-style:italic;">All caught up. Ledger updated.</div>';dots.forEach(function(d){d.classList.add('on');});document.getElementById('pulseCount').textContent='Done';}}
+
+function toggleStep(el){el.classList.toggle('done');var c=el.querySelector('.bstep-check');if(c)c.textContent=el.classList.contains('done')?'✓':'';}
+
+var assignTarget=null;
+function openAssign(chip){assignTarget=chip.closest('.bstep');document.getElementById('assignModal').classList.add('open');}
+function closeAssign(){document.getElementById('assignModal').classList.remove('open');document.querySelectorAll('.as-member').forEach(function(m){m.classList.remove('sel');});}
+function selMember(el){document.querySelectorAll('.as-member').forEach(function(m){m.classList.remove('sel');});el.classList.add('sel');}
+function confirmAssign(){var sel=document.querySelector('.as-member.sel');if(!sel||!assignTarget)return closeAssign();var name=sel.querySelector('.as-name').textContent;var chip=assignTarget.querySelector('.achip');if(chip){chip.textContent=name+' →';chip.classList.add('by-other');}var tag=assignTarget.querySelector('.bstep-tag');if(tag)tag.textContent='Tomorrow · assigned to '+name;closeAssign();}
+
+// ── GROCERY ──
+function toggleCheck(el){el.classList.toggle('checked');el.textContent=el.classList.contains('checked')?'✓':'';var n=el.nextElementSibling;if(n)n.classList.toggle('x',el.classList.contains('checked'));}
+function toggleShopping(){var n=document.getElementById('normalGrocery'),s=document.getElementById('shoppingMode'),isS=s.style.display==='block';n.style.display=isS?'block':'none';s.style.display=isS?'none':'block';}
+function setStore(b){b.closest('.sch').querySelectorAll('.sc').forEach(function(c){c.classList.remove('active');});b.classList.add('active');}
+
+// ── RECIPES ──
+function switchRecipeTab(tab){
+  document.getElementById('tabPlan').classList.toggle('active',tab==='plan');
+  document.getElementById('tabBook').classList.toggle('active',tab==='book');
+  document.getElementById('recTabPlan').style.display=tab==='plan'?'block':'none';
+  document.getElementById('recTabBook').style.display=tab==='book'?'block':'none';
+}
+function setFilt(btn){document.querySelectorAll('.fchip').forEach(function(c){c.classList.remove('active');});btn.classList.add('active');}
+function filterRecs(val){document.querySelectorAll('.rrow').forEach(function(r){r.style.display=r.querySelector('.rrn').textContent.toLowerCase().includes(val.toLowerCase())?'flex':'none';});}
+function applyCombo(){document.querySelectorAll('.dmeal.empty').forEach(function(el,i){var meals=[{i:'🥚',n:'Scrambled Eggs & Toast',m:'8 min · All in stock'},{i:'🍗',n:'Chicken Stir-Fry',m:'15 min · All in stock'}];var m=meals[i%2];el.classList.remove('empty');el.classList.add('planned');el.innerHTML='<div class="dmi">'+m.i+'</div><div class="dminf"><div class="dmn">'+m.n+'</div><div class="dmm">'+m.m+'</div></div><div class="dmbadge b-planned">Planned</div>';});}
+function pickMeal(el){var meals=[{i:'🥚',n:'Scrambled Eggs & Toast',m:'8 min · All in stock'},{i:'🍗',n:'Chicken Stir-Fry',m:'15 min · All in stock'}];var m=meals[Math.floor(Math.random()*2)];el.classList.remove('empty');el.classList.add('planned');el.innerHTML='<div class="dmi">'+m.i+'</div><div class="dminf"><div class="dmn">'+m.n+'</div><div class="dmm">'+m.m+'</div></div><div class="dmbadge b-planned">Planned</div>';}
+</script>
+</body>
+</html>
