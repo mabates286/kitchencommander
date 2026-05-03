@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Commander — Executive Function as a Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --cream:#F7F3EE;--cream-dark:#EDE7DC;
+      --sage:#7A9E7E;--sage-light:#C8DBC9;--sage-dark:#4A6B4E;
+      --terra:#C4714A;--terra-light:#EDD5C8;--terra-dark:#8B4A2E;
+      --bark:#3D2E1E;--bark-mid:#6B5240;--bark-light:#A08060;
+      --warm-white:#FDFAF6;
+      --font-display:'Fraunces',serif;--font-body:'DM Sans',sans-serif;
+    }
+    html,body{margin:0;padding:0;background:#f5f1eb;font-family:var(--font-body);}
+    .lp{background:var(--cream);color:var(--bark);max-width:720px;margin:0 auto;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* TOPBAR */
+    .lp-topbar{background:var(--bark);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+    .lp-logo{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--cream);}
+    .lp-logo span{color:var(--terra);}
+    .lp-nav{display:flex;gap:18px;align-items:center;}
+    .lp-nav a{color:rgba(255,255,255,.7);font-size:13px;text-decoration:none;cursor:pointer;}
+    .lp-nav a:hover{color:var(--cream);}
+    .lp-cta-top{background:var(--terra);color:white;border:none;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-body);}
+
+    /* HERO */
+    .hero{background:var(--bark);padding:36px 28px 40px;text-align:center;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;border-radius:50%;background:var(--sage-dark);opacity:.15;}
+    .hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:var(--terra);opacity:.12;}
+    .hero-badge{display:inline-block;background:rgba(196,113,74,.2);border:1px solid var(--terra);border-radius:20px;padding:6px 14px;font-size:11px;letter-spacing:.6px;color:var(--terra);margin-bottom:18px;text-transform:uppercase;font-weight:500;position:relative;z-index:1;}
+    .hero-icon{font-size:48px;margin-bottom:12px;position:relative;z-index:1;}
+    .hero-title{font-family:var(--font-display);font-size:36px;font-weight:400;color:var(--cream);line-height:1.1;margin-bottom:14px;position:relative;z-index:1;}
+    .hero-title em{font-style:italic;color:var(--terra);}
+    .hero-sub{font-size:15px;color:var(--bark-light);line-height:1.6;max-width:480px;margin:0 auto 22px;position:relative;z-index:1;}
+
+    /* WAITLIST FORM */
+    .waitlist{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;max-width:440px;margin:0 auto;position:relative;z-index:1;}
+    .waitlist-eyebrow{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--sage-light);margin-bottom:8px;font-weight:500;}
+    .waitlist-title{font-family:var(--font-display);font-size:17px;color:var(--cream);font-weight:400;margin-bottom:14px;}
+    .waitlist-title em{color:var(--sage-light);font-style:italic;}
+    .form-row{display:flex;gap:8px;margin-bottom:10px;}
+    .wl-input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-family:var(--font-body);font-size:14px;color:var(--cream);outline:none;transition:border .2s;}
+    .wl-input:focus{border-color:var(--terra);}
+    .wl-input::placeholder{color:rgba(255,255,255,.4);}
+    .wl-submit{background:var(--terra);color:white;border:none;border-radius:10px;padding:12px 20px;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .2s;}
+    .wl-submit:hover{background:var(--terra-dark);}
+    .wl-submit:disabled{opacity:.5;cursor:not-allowed;}
+    .wl-checks{display:flex;flex-direction:column;gap:6px;text-align:left;margin-top:12px;}
+    .wl-check{display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(255,255,255,.6);}
+    .wl-check-icon{color:var(--sage-light);}
+    .success-msg{display:none;background:rgba(122,158,126,.15);border:1px solid var(--sage);border-radius:10px;padding:12px 14px;color:var(--sage-light);font-size:13px;margin-top:10px;text-align:center;animation:fadeIn .3s ease both;}
+    .success-msg.show{display:block;}
+    .success-msg strong{color:var(--cream);font-weight:500;}
+
+    .hero-stats{display:flex;justify-content:center;gap:24px;margin-top:18px;position:relative;z-index:1;}
+    .hs-stat{text-align:center;}
+    .hs-num{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--terra);}
+    .hs-lbl{font-size:10px;color:var(--bark-light);text-transform:uppercase;letter-spacing:.5px;}
+
+    /* SECTION HEADERS */
+    .section{padding:36px 24px;}
+    .section-eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--terra);margin-bottom:8px;font-weight:500;text-align:center;}
+    .section-title{font-family:var(--font-display);font-size:28px;font-weight:400;color:var(--bark);line-height:1.2;text-align:center;margin-bottom:8px;}
+    .section-title em{font-style:italic;color:var(--terra);}
+    .section-sub{font-size:14px;color:var(--bark-light);line-height:1.6;text-align:center;max-width:460px;margin:0 auto 26px;}
+
+    /* PROBLEM SECTION */
+    .problem{background:var(--warm-white);}
+    .problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:540px;margin:0 auto;}
+    .problem-card{background:var(--cream);border-radius:13px;padding:16px 14px;text-align:left;border-left:3px solid var(--terra);}
+    .pc-icon{font-size:24px;margin-bottom:6px;}
+    .pc-title{font-size:14px;font-weight:500;color:var(--bark);margin-bottom:4px;line-height:1.3;}
+    .pc-text{font-size:12px;color:var(--bark-light);line-height:1.5;}
+
+    /* FEATURES */
+    .features{background:var(--cream);}
+    .features-grid{display:flex;flex-direction:column;gap:14px;max-width:540px;margin:0 auto;}
+    .feature-card{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:flex-start;}
+    .fc-emoji{font-size:32px;flex-shrink:0;}
+    .fc-info{flex:1;}
+    .fc-title{font-family:var(--font-display);font-size:17px;color:var(--bark);font-weight:500;margin-bottom:5px;}
+    .fc-title em{font-style:italic;color:var(--terra-dark);}
+    .fc-desc{font-size:13px;color:var(--bark-light);line-height:1.55;}
+    .fc-desc strong{color:var(--bark);font-weight:500;}
+
+    /* HOW IT WORKS */
+    .how-it-works{background:var(--bark);color:var(--cream);}
+    .how-it-works .section-eyebrow{color:var(--sage-light);}
+    .how-it-works .section-title{color:var(--cream);}
+    .how-it-works .section-title em{color:var(--sage-light);}
+    .how-it-works .section-sub{color:var(--bark-light);}
+    .steps-grid{display:flex;flex-direction:column;gap:14px;max-width:480px;margin:0 auto;}
+    .step-row{display:flex;gap:14px;align-items:flex-start;}
+    .step-num-circle{width:36px;height:36px;border-radius:50%;background:var(--terra);color:white;font-family:var(--font-display);font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .step-content{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;}
+    .step-title{font-size:14px;font-weight:500;color:var(--cream);margin-bottom:4px;}
+    .step-desc{font-size:12px;color:var(--bark-light);line-height:1.55;}
+
+    /* DEMO LINK */
+    .demo-section{background:var(--terra);text-align:center;padding:32px 24px;}
+    .demo-eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:500;margin-bottom:8px;}
+    .demo-title{font-family:var(--font-display);font-size:24px;color:white;font-weight:400;margin-bottom:8px;}
+    .demo-title em{font-style:italic;}
+    .demo-sub{font-size:13px;color:rgba(255,255,255,.85);line-height:1.55;max-width:380px;margin:0 auto 16px;}
+    .demo-btn{display:inline-flex;align-items:center;gap:8px;background:white;color:var(--terra-dark);border:none;border-radius:11px;padding:12px 20px;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;}
+
+    /* TESTIMONIALS */
+    .testimonials{background:var(--warm-white);}
+    .quote-card{background:var(--cream);border-left:3px solid var(--sage);border-radius:0 12px 12px 0;padding:16px 18px;max-width:480px;margin:0 auto 12px;}
+    .quote-text{font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--bark);line-height:1.55;margin-bottom:8px;}
+    .quote-author{font-size:12px;color:var(--bark-light);}
+    .quote-author strong{color:var(--bark);font-weight:500;}
+
+    /* FEATURE REQUEST */
+    .feature-request{background:var(--sage-dark);color:var(--cream);}
+    .feature-request .section-eyebrow{color:var(--sage-light);}
+    .feature-request .section-title{color:var(--cream);}
+    .feature-request .section-title em{color:var(--sage-light);}
+    .feature-request .section-sub{color:var(--bark-light);}
+    .fr-form{max-width:480px;margin:0 auto;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px;}
+    .fr-input{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-family:var(--font-body);font-size:14px;color:var(--cream);outline:none;transition:border .2s;margin-bottom:10px;}
+    .fr-input:focus{border-color:var(--terra);}
+    .fr-input::placeholder{color:rgba(255,255,255,.4);}
+    .fr-textarea{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-family:var(--font-body);font-size:14px;color:var(--cream);outline:none;transition:border .2s;margin-bottom:10px;resize:vertical;min-height:100px;}
+    .fr-textarea:focus{border-color:var(--terra);}
+    .fr-textarea::placeholder{color:rgba(255,255,255,.4);}
+    .fr-submit{width:100%;background:var(--terra);color:white;border:none;border-radius:10px;padding:13px 20px;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;}
+    .fr-submit:hover{background:var(--terra-dark);}
+    .fr-submit:disabled{opacity:.5;cursor:not-allowed;}
+    .fr-success{display:none;background:rgba(122,158,126,.15);border:1px solid var(--sage);border-radius:10px;padding:12px 14px;color:var(--sage-light);font-size:13px;text-align:center;margin-top:10px;animation:fadeIn .3s ease both;}
+    .fr-success.show{display:block;}
+    .fr-success strong{color:var(--cream);font-weight:500;}
+
+    /* FAQ */
+    .faq{background:var(--cream);}
+    .faq-list{max-width:540px;margin:0 auto;}
+    .faq-item{background:var(--warm-white);border:1px solid var(--cream-dark);border-radius:11px;padding:14px 16px;margin-bottom:8px;cursor:pointer;}
+    .faq-q{font-size:14px;font-weight:500;color:var(--bark);display:flex;align-items:center;justify-content:space-between;}
+    .faq-arrow{color:var(--bark-light);transition:transform .2s;font-size:13px;}
+    .faq-item.open .faq-arrow{transform:rotate(180deg);}
+    .faq-a{font-size:13px;color:var(--bark-light);line-height:1.6;margin-top:0;max-height:0;overflow:hidden;transition:all .25s ease;}
+    .faq-item.open .faq-a{margin-top:10px;max-height:200px;}
+
+    /* FINAL CTA */
+    .final-cta{background:var(--bark);text-align:center;padding:36px 24px;}
+    .fc-title{font-family:var(--font-display);font-size:28px;color:var(--cream);font-weight:400;line-height:1.2;margin-bottom:10px;}
+    .fc-title em{font-style:italic;color:var(--terra);}
+    .fc-sub{font-size:14px;color:var(--bark-light);max-width:380px;margin:0 auto 20px;line-height:1.6;}
+    .fc-form{display:flex;gap:8px;max-width:380px;margin:0 auto 12px;}
+    .fc-input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-family:var(--font-body);font-size:14px;color:var(--cream);outline:none;}
+    .fc-input::placeholder{color:rgba(255,255,255,.4);}
+    .fc-submit{background:var(--terra);color:white;border:none;border-radius:10px;padding:12px 20px;font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;}
+    .fc-submit:disabled{opacity:.5;cursor:not-allowed;}
+    .fc-note{font-size:11px;color:var(--bark-light);}
+
+    /* FOOTER */
+    .footer{background:#1a1108;padding:18px 24px;text-align:center;border-top:1px solid rgba(255,255,255,.05);}
+    .footer-text{font-size:11px;color:var(--bark-light);line-height:1.6;}
+    .footer-text strong{color:var(--cream-dark);font-weight:500;}
+  </style>
+</head>
+<body>
+<div class="lp">
+
+  <!-- TOPBAR -->
+  <div class="lp-topbar">
+    <div class="lp-logo">Kitchen <span>Commander</span></div>
+    <div class="lp-nav">
+      <a onclick="document.getElementById('howSection').scrollIntoView({behavior:'smooth'})">How it works</a>
+      <a onclick="document.getElementById('featuresSection').scrollIntoView({behavior:'smooth'})">Features</a>
+      <button class="lp-cta-top" onclick="document.getElementById('emailInput').focus()">Join waitlist</button>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">Built for ADHD households</div>
+    <div class="hero-icon">🍳</div>
+    <div class="hero-title">Your household's<br><em>shared brain.</em></div>
+    <div class="hero-sub">Kitchen Commander is the first app built for neurodivergent brains — whether you're managing a household solo, coordinating with a partner, or wrangling a full family. AI-powered meal planning, zero manual entry, and a Crash Out button for when dinner just isn't happening.</div>
+
+    <div class="waitlist">
+      <div class="waitlist-eyebrow">Early Access — Free</div>
+      <div class="waitlist-title">Be the first to <em>try it.</em></div>
+      <form class="form-row" id="mainForm" onsubmit="submitWaitlist(event,'main')">
+        <input type="email" class="wl-input" id="emailInput" placeholder="your@email.com" required>
+        <button type="submit" class="wl-submit" id="mainSubmit">Join Waitlist →</button>
+      </form>
+      <div class="success-msg" id="successMsg">
+        <strong>You're in! 🎉</strong> We'll email you when early access opens.
+      </div>
+      <div class="wl-checks">
+        <div class="wl-check"><span class="wl-check-icon">✓</span>Founding members get early access perks</div>
+        <div class="wl-check"><span class="wl-check-icon">✓</span>Direct input on features that ship</div>
+        <div class="wl-check"><span class="wl-check-icon">✓</span>No spam — we'll only email when there's news</div>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hs-stat"><div class="hs-num">12+</div><div class="hs-lbl">Features built</div></div>
+      <div class="hs-stat"><div class="hs-num">6</div><div class="hs-lbl">User journeys</div></div>
+      <div class="hs-stat"><div class="hs-num">100%</div><div class="hs-lbl">Family-tested</div></div>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <div class="section problem">
+    <div class="section-eyebrow">The Problem</div>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="pc-icon">😵‍💫</div>
+        <div class="pc-title">"What's for dinner?" panic</div>
+        <div class="pc-text">It's 5 PM. The fridge is full but you have no plan, no energy, and three people asking what's for dinner.</div>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">📋</div>
+        <div class="pc-title">Manual list hell</div>
+        <div class="pc-text">Other apps want you to type every item. ADHD brains don't have time for that. We don't either.</div>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">🥡</div>
+        <div class="pc-title">Hidden food waste</div>
+        <div class="pc-text">You forgot you had broccoli. It expired. The average household wastes $1,500/year on forgotten food.</div>
+      </div>
+      <div class="problem-card">
+        <div class="pc-icon">🤝</div>
+        <div class="pc-title">Everyone wants to help</div>
+        <div class="pc-text">Your partner asks "what can I do?" Your kids want to contribute. But coordinating is exhausting without a shared system.</div>
+      </div>
+    </div>
+    <div class="section-title" style="margin-top:26px;">If you're <em>nodding,</em><br>this app is for you.</div>
+    <div class="section-sub">Existing meal apps assume you have unlimited executive function. We don't. So we built an app that manages it for you.</div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section features" id="featuresSection">
+    <div class="section-eyebrow">What's Inside</div>
+    <div class="section-title">Built for the <em>chaos</em><br>of real family life.</div>
+    <div class="section-sub">Every feature exists because a neurodivergent person asked for it. Whether you cook for one or feed a household — no fluff, no bloat.</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="fc-emoji">📸</div>
+        <div class="fc-info">
+          <div class="fc-title">Vision AI <em>scanning</em></div>
+          <div class="fc-desc">Snap a photo of your fridge or receipt. AI builds your entire pantry in seconds. <strong>Minimal typing required.</strong></div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-emoji">🛑</div>
+        <div class="fc-info">
+          <div class="fc-title">The <em>Crash Out</em> button</div>
+          <div class="fc-desc">Bad day? Tap once. The app pivots to zero-effort meals or vetted delivery. <strong>Escape hatch when you need it.</strong></div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-emoji">🧠</div>
+        <div class="fc-info">
+          <div class="fc-title">The <em>Pulp Mandate</em></div>
+          <div class="fc-desc">Recipes that hide vegetables your sensory-sensitive kids will never detect. <strong>Sneaky and effective.</strong></div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-emoji">🎒</div>
+        <div class="fc-info">
+          <div class="fc-title"><em>Lunchbox Mode</em> for kids</div>
+          <div class="fc-desc">Kids pack their own lunches with parent-approved options. Step-by-step instructions, icepack reminders, practice-night extras. <strong>Builds independence.</strong></div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-emoji">🍎</div>
+        <div class="fc-info">
+          <div class="fc-title">Anytime <em>Snack List</em></div>
+          <div class="fc-desc">"I'm hungry!" The kid taps the app, sees what's approved, where to find it, and how much they can have. <strong>No more meltdowns.</strong></div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-emoji">🔵</div>
+        <div class="fc-info">
+          <div class="fc-title"><em>Alexa & Google</em> integration</div>
+          <div class="fc-desc">Emergent readers ask Alexa "what can I have for a snack?" and get a real answer based on your pantry. <strong>Total game changer.</strong></div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-emoji">🤝</div>
+        <div class="fc-info">
+          <div class="fc-title">Shared <em>task delegation</em></div>
+          <div class="fc-desc">Everyone can see what needs doing, grab a task, and mark it done. Whether it's a partner, roommate, or just you — <strong>work gets distributed, not duplicated.</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section how-it-works" id="howSection">
+    <div class="section-eyebrow">How It Works</div>
+    <div class="section-title">From zero to <em>shared brain</em><br>in under 3 minutes.</div>
+    <div class="section-sub">No spreadsheets to fill out. No tutorials. No grocery list to type from scratch.</div>
+    <div class="steps-grid">
+      <div class="step-row">
+        <div class="step-num-circle">1</div>
+        <div class="step-content">
+          <div class="step-title">Snap two photos</div>
+          <div class="step-desc">Your fridge and your last receipt. That's the entire setup. AI does the rest.</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num-circle">2</div>
+        <div class="step-content">
+          <div class="step-title">Get your first briefing</div>
+          <div class="step-desc">"Good morning, Jamie. High-density day ahead." The app already knows about soccer practice and adjusted dinner timing.</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num-circle">3</div>
+        <div class="step-content">
+          <div class="step-title">Invite your family</div>
+          <div class="step-desc">Partner, kids, anyone. They each see what they need to see. The mesh updates in real time.</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-num-circle">4</div>
+        <div class="step-content">
+          <div class="step-title">Just live your life</div>
+          <div class="step-desc">The app handles meal planning, shopping lists, kid lunches, and the daily Crash Outs. You handle being a human.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMO -->
+  <div class="demo-section">
+    <div class="demo-eyebrow">See it in action</div>
+    <div class="demo-title">Explore the <em>prototype.</em></div>
+    <div class="demo-sub">Tap through an early working demo. See the onboarding flow, dashboard, recipes, lunchbox mode, and more. This is a prototype — not the final app.</div>
+    <a href="https://kitchencommander-blue.vercel.app" target="_blank" class="demo-btn">📱 Try the prototype →</a>
+  </div>
+
+  <!-- FEATURE REQUEST -->
+  <div class="section feature-request">
+    <div class="section-eyebrow">Help Build This</div>
+    <div class="section-title">What feature would <em>change your life?</em></div>
+    <div class="section-sub">You know your household better than we do. Tell us what's missing. The best ideas ship first.</div>
+    <div class="fr-form">
+      <form id="featureForm" onsubmit="submitFeature(event)">
+        <input type="email" class="fr-input" id="featureEmail" placeholder="Your email (so we can follow up)" required>
+        <textarea class="fr-textarea" id="featureText" placeholder="Describe the feature you wish existed..." required></textarea>
+        <button type="submit" class="fr-submit" id="featureSubmit">Submit Feature Request →</button>
+      </form>
+      <div class="fr-success" id="featureSuccess">
+        <strong>Got it! 🙌</strong> We'll review this and follow up if we build it.
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section faq">
+    <div class="section-eyebrow">Questions</div>
+    <div class="section-title">Things you might <em>be wondering.</em></div>
+    <div class="faq-list">
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q"><span>When does this launch?</span><span class="faq-arrow">▼</span></div>
+        <div class="faq-a">We're currently in prototype and pre-launch. Founding members on the waitlist get first access and early perks. Target launch: 2026.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q"><span>How much will it cost?</span><span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Around $8–10/month per household — but waitlist members get early access perks and discounted pricing as a thank you for early support.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q"><span>Is my data private?</span><span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Yes. We collect age ranges only for kids — never names or photos. Your pantry data is yours. We never sell anything to advertisers. Period.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q"><span>Do I need an Echo or Google Home?</span><span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Nope. The app works perfectly on its own. Smart speakers are an optional bonus — especially great for kids who can't read yet.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q"><span>What if I'm not neurodivergent?</span><span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Built for ADHD/Autism users, but works beautifully for any busy person or household. If executive function feels hard sometimes, this app helps.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q"><span>Who's behind this?</span><span class="faq-arrow">▼</span></div>
+        <div class="faq-a">A neurodivergent person who got tired of meal planning apps that assume everyone has neurotypical executive function. Built with input from real ADHD/Autism users.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL CTA -->
+  <div class="final-cta">
+    <div class="fc-title">Ready to <em>command your kitchen?</em></div>
+    <div class="fc-sub">Join the waitlist. Get founding member perks. Be part of building something that actually fits your brain.</div>
+    <form class="fc-form" id="finalForm" onsubmit="submitWaitlist(event,'final')">
+      <input type="email" class="fc-input" id="finalEmail" placeholder="your@email.com" required>
+      <button type="submit" class="fc-submit" id="finalSubmit">Join →</button>
+    </form>
+    <div class="fc-note" id="finalNote">Founding members get early access and perks.</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-text">
+      <strong>Kitchen Commander</strong> · Built for neurodivergent households<br>
+      © 2026 · Privacy-first always · Made for real life
+    </div>
+  </div>
+</div>
+
+<script>
+
+const SCRIPT_URL =’https://script.google.com/macros/s/AKfycbxOa-3OQcbNzH1VUSH1q7eQ_QQx1Nal-gbj6cTcLj7QHtTwSgepUFvcjdzASXx0GkG_3g/exec’;
+
+async function submitWaitlist(e, source) {
+  e.preventDefault();
+  const form = e.target;
+  const input = form.querySelector('input[type="email"]');
+  const submit = form.querySelector('button[type="submit"]');
+  const email = input.value.trim();
+  
+  if(!email) return;
+
+  submit.disabled = true;
+  submit.textContent = 'Joining...';
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({
+        type: 'waitlist',
+        email: email,
+        source: source
+      })
+    });
+
+    if(source === 'main'){
+      form.style.display = 'none';
+      document.getElementById('successMsg').classList.add('show');
+    } else {
+      input.value = '';
+      const note = document.getElementById('finalNote');
+      note.innerHTML = '<strong style="color:var(--sage-light);">✓ You\'re on the list!</strong> Check your email.';
+      submit.textContent = 'Join →';
+      submit.disabled = false;
+    }
+  } catch(error) {
+    console.error('Error:', error);
+    alert('Oops! Something went wrong. Please try again.');
+    submit.disabled = false;
+    submit.textContent = source === 'main' ? 'Join Waitlist →' : 'Join →';
+  }
+}
+
+async function submitFeature(e) {
+  e.preventDefault();
+  const form = e.target;
+  const emailInput = document.getElementById('featureEmail');
+  const textInput = document.getElementById('featureText');
+  const submit = document.getElementById('featureSubmit');
+  
+  const email = emailInput.value.trim();
+  const request = textInput.value.trim();
+  
+  if(!email || !request) return;
+
+  submit.disabled = true;
+  submit.textContent = 'Submitting...';
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({
+        type: 'feature',
+        email: email,
+        request: request
+      })
+    });
+
+    form.style.display = 'none';
+    document.getElementById('featureSuccess').classList.add('show');
+  } catch(error) {
+    console.error('Error:', error);
+    alert('Oops! Something went wrong. Please try again.');
+    submit.disabled = false;
+    submit.textContent = 'Submit Feature Request →';
+  }
+}
+
+function toggleFaq(el){
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>
