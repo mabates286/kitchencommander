@@ -411,7 +411,7 @@
 </div>
 
 <script>
-const SCRIPT_URL = 'https://formspree.io/f/xojreynn';
+const FORMSPREE_URL = 'https://formspree.io/f/xojreynn';
 
 async function submitWaitlist(e, source) {
   e.preventDefault();
@@ -426,25 +426,33 @@ async function submitWaitlist(e, source) {
   submit.textContent = 'Joining...';
 
   try {
-    const response = await fetch(https://formspree.io/f/xojreynn, {
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('type', 'waitlist');
+    formData.append('source', source);
+    formData.append('_subject', 'New Kitchen Commander Waitlist Signup');
+
+    const response = await fetch(FORMSPREE_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({
-        type: 'waitlist',
-        email: email,
-        source: source
-      })
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
     });
 
-    if(source === 'main'){
-      form.style.display = 'none';
-      document.getElementById('successMsg').classList.add('show');
+    if (response.ok) {
+      if(source === 'main'){
+        form.style.display = 'none';
+        document.getElementById('successMsg').classList.add('show');
+      } else {
+        input.value = '';
+        const note = document.getElementById('finalNote');
+        note.innerHTML = '<strong style="color:var(--sage-light);">✓ You\'re on the list!</strong> Check your email.';
+        submit.textContent = 'Join →';
+        submit.disabled = false;
+      }
     } else {
-      input.value = '';
-      const note = document.getElementById('finalNote');
-      note.innerHTML = '<strong style="color:var(--sage-light);">✓ You\'re on the list!</strong> Check your email.';
-      submit.textContent = 'Join →';
-      submit.disabled = false;
+      throw new Error('Form submission failed');
     }
   } catch(error) {
     console.error('Error:', error);
@@ -470,18 +478,26 @@ async function submitFeature(e) {
   submit.textContent = 'Submitting...';
 
   try {
-    const response = await fetch(SCRIPT_URL, {
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('feature_request', request);
+    formData.append('type', 'feature');
+    formData.append('_subject', 'New Kitchen Commander Feature Request');
+
+    const response = await fetch(FORMSPREE_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({
-        type: 'feature',
-        email: email,
-        request: request
-      })
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
     });
 
-    form.style.display = 'none';
-    document.getElementById('featureSuccess').classList.add('show');
+    if (response.ok) {
+      form.style.display = 'none';
+      document.getElementById('featureSuccess').classList.add('show');
+    } else {
+      throw new Error('Form submission failed');
+    }
   } catch(error) {
     console.error('Error:', error);
     alert('Oops! Something went wrong. Please try again.');
